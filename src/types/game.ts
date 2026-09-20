@@ -196,11 +196,33 @@ export type EndingReason =
   | "party_wiped"
   | "starved_stranded";
 
+/** A single contribution to a risk assessment, e.g. a party member's skill or a trait. */
+export interface RiskFactor {
+  label: string;
+  delta: number; // percentage points, positive or negative
+}
+
+/**
+ * A percentage assessment of a choice's outcome, built from a base rate plus
+ * party-derived factors. `frame` says which direction is "the thing being
+ * measured": for "success" a higher chance is good, for "danger" a higher
+ * chance is bad. The same assessment is used both to render the odds in the
+ * UI and to roll the actual outcome, so displayed and real odds never drift.
+ */
+export interface RiskAssessment {
+  chance: number; // 0-100
+  frame: "success" | "danger";
+  base: number;
+  factors: RiskFactor[];
+}
+
 export interface EventChoiceDef {
   id: string;
   label: string;
   requiresRole?: Role;
   requiresItem?: string;
+  // Party-derived odds for this choice's outcome, shown in the UI before the player commits.
+  risk?: (state: GameState) => RiskAssessment;
   // Mutates the draft state directly (immer) and returns narrative outcome text.
   effect: (draft: GameState, rng: () => number) => string;
 }

@@ -604,6 +604,37 @@ h1, h2, h3, h4 {
   color: var(--ink-soft);
   font-weight: 400;
 }
+
+.risk-display {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px dotted #d0bd94;
+  width: 100%;
+}
+.risk-chance {
+  font-size: 0.82em;
+  font-weight: 700;
+}
+.risk-display.frame-success .risk-chance {
+  color: var(--good);
+}
+.risk-display.frame-danger .risk-chance {
+  color: var(--bad);
+}
+.risk-factors {
+  list-style: none;
+  margin: 3px 0 0;
+  padding: 0;
+  font-size: 0.72em;
+  font-weight: 400;
+  color: var(--ink-soft);
+}
+.risk-factors li.good {
+  color: var(--good);
+}
+.risk-factors li.bad {
+  color: var(--bad);
+}
 .trade-scroll {
   max-height: 50vh;
   overflow-y: auto;

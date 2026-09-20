@@ -1,8 +1,11 @@
 import { useGameStore } from "../../state/gameStore";
 import { TRAIL_BY_ID } from "../../data/trail";
+import { assessCrossingRisk } from "../../systems/river";
+import RiskDisplay from "../shared/RiskDisplay";
 import type { RiverCrossingMethod } from "../../types/game";
 
 export default function RiverCrossingModal() {
+  const state = useGameStore();
   const pendingRiverCrossing = useGameStore((s) => s.pendingRiverCrossing);
   const currentLandmarkId = useGameStore((s) => s.currentLandmarkId);
   const resolveRiverCrossing = useGameStore((s) => s.resolveRiverCrossing);
@@ -56,17 +59,21 @@ export default function RiverCrossingModal() {
           Depth: {crossing.depthFt} ft &middot; Current: {"⚡".repeat(Math.max(1, Math.round(crossing.currentSpeed / 2)))}
         </p>
         <div className="modal-choices">
-          {options.map((opt) => (
-            <button
-              key={opt.id}
-              className="btn choice-btn"
-              disabled={opt.disabled}
-              onClick={() => resolveRiverCrossing(opt.id)}
-            >
-              <span>{opt.label}</span>
-              <span className="choice-hint">{opt.hint}</span>
-            </button>
-          ))}
+          {options.map((opt) => {
+            const assessment = assessCrossingRisk(state, crossing, opt.id);
+            return (
+              <button
+                key={opt.id}
+                className="btn choice-btn"
+                disabled={opt.disabled}
+                onClick={() => resolveRiverCrossing(opt.id)}
+              >
+                <span>{opt.label}</span>
+                <span className="choice-hint">{opt.hint}</span>
+                {assessment && <RiskDisplay assessment={assessment} dangerLabel="chance of trouble" />}
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>

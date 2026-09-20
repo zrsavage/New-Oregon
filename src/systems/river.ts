@@ -1,5 +1,6 @@
-import type { GameState, RiverCrossing, RiverCrossingMethod } from "../types/game";
-import { adjustHealth, getItemQty, livingParty, pushLog, removeItem, skillFor } from "./mutators";
+import type { GameState, RiskAssessment, RiverCrossing, RiverCrossingMethod } from "../types/game";
+import { adjustHealth, getItemQty, livingParty, pushLog, removeItem } from "./mutators";
+import { assessChance, factorsOf, roleDangerReduction, rollAgainst } from "./risk";
 import { randInt } from "./rng";
 import { ITEMS } from "../data/items";
 
@@ -8,8 +9,33 @@ export interface CrossingResult {
   narrative: string;
 }
 
-function riskScore(crossing: RiverCrossing): number {
+function severity(crossing: RiverCrossing): number {
   return crossing.depthFt * 1.2 + crossing.currentSpeed;
+}
+
+/**
+ * Odds of a bad outcome for a given crossing method, factoring in the party's
+ * scout (fords) or wainwright (caulk-and-float). Ferry and wait have no risk
+ * roll of their own, so they return null. Used both to render the odds in
+ * the crossing modal and to roll the real outcome below.
+ */
+export function assessCrossingRisk(state: GameState, crossing: RiverCrossing, method: RiverCrossingMethod): RiskAssessment | null {
+  const risk = severity(crossing);
+  if (method === "ford") {
+    const base = (risk / 55) * 100;
+    const factors = factorsOf(roleDangerReduction(state, "scout", "Scout", 35));
+    return assessChance(base, factors, "danger");
+  }
+  if (method === "caulk_float") {
+    const base = (risk / 90) * 100;
+    const factors = factorsOf(roleDangerReduction(state, "wainwright", "Wainwright", 35));
+    return assessChance(base, factors, "danger");
+  }
+  if (method === "guide") {
+    const base = (risk / 200) * 100;
+    return assessChance(base, [], "danger");
+  }
+  return null;
 }
 
 export function attemptCrossing(
@@ -18,10 +44,6 @@ export function attemptCrossing(
   method: RiverCrossingMethod,
   rng: () => number
 ): CrossingResult {
-  const scoutSkill = skillFor(draft, "scout");
-  const wainwrightSkill = skillFor(draft, "wainwright");
-  const risk = riskScore(crossing);
-
   if (method === "ferry") {
     if (!crossing.hasFerry) return { success: false, narrative: "There's no ferry operating here." };
     if (draft.cash < crossing.ferryCost) return { success: false, narrative: "You can't afford the ferry fee." };
@@ -34,8 +56,8 @@ export function attemptCrossing(
     if (!crossing.hasGuide) return { success: false, narrative: "No guide is available here." };
     if (draft.cash < crossing.guideCost) return { success: false, narrative: "You can't afford the guide's fee." };
     draft.cash -= crossing.guideCost;
-    const failChance = Math.max(0.03, risk / 200);
-    if (rng() < failChance) {
+    const assessment = assessCrossingRisk(draft, crossing, "guide")!;
+    if (rollAgainst(assessment, rng)) {
       const lost = Math.min(getItemQty(draft, "flour"), randInt(rng, 5, 20));
       removeItem(draft, "flour", lost);
       pushLog(draft, `Even with a guide, ${crossing.name} claims some supplies.`, "bad");
@@ -51,11 +73,8 @@ export function attemptCrossing(
   }
 
   // ford or caulk_float
-  const skillBonus = method === "caulk_float" ? wainwrightSkill : scoutSkill;
-  const baseFailChance = method === "caulk_float" ? risk / 90 : risk / 55;
-  const failChance = Math.max(0.02, baseFailChance - skillBonus / 300);
-
-  if (rng() < failChance) {
+  const assessment = assessCrossingRisk(draft, crossing, method)!;
+  if (rollAgainst(assessment, rng)) {
     // Failure: lose cargo, damage wagon, possible injury.
     const weightLossFrac = 0.05 + rng() * 0.15;
     for (const stack of draft.inventory) {

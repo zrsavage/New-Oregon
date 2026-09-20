@@ -2,8 +2,10 @@ import { useGameStore } from "../../state/gameStore";
 import { EVENTS_BY_ID } from "../../data/events";
 import { ROLES } from "../../data/roles";
 import { ITEMS } from "../../data/items";
+import RiskDisplay from "../shared/RiskDisplay";
 
 export default function EventModal() {
+  const state = useGameStore();
   const pendingEvent = useGameStore((s) => s.pendingEvent);
   const lastEventNarrative = useGameStore((s) => s.lastEventNarrative);
   const resolveEvent = useGameStore((s) => s.resolveEvent);
@@ -43,6 +45,7 @@ export default function EventModal() {
                   {choice.requiresItem && `Uses ${ITEMS[choice.requiresItem]?.name ?? choice.requiresItem}`}
                 </span>
               )}
+              {choice.risk && <RiskDisplay assessment={choice.risk(state)} />}
             </button>
           ))}
         </div>
