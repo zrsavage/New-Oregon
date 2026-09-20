@@ -1,12 +1,13 @@
 import type { GameState, RiskAssessment, RiverCrossing, RiverCrossingMethod } from "../types/game";
-import { adjustHealth, getItemQty, livingParty, pushLog, removeItem } from "./mutators";
-import { assessChance, factorsOf, roleDangerReduction, rollAgainst } from "./risk";
+import { adjustHealth, gainSkill, getItemQty, livingParty, partyHasRole, pushLog, removeItem, totalWeight } from "./mutators";
+import { assessChanceFor, factorsOf, roleDangerReduction, rollAgainst } from "./risk";
 import { randInt } from "./rng";
 import { ITEMS } from "../data/items";
 
 export interface CrossingResult {
   success: boolean;
   narrative: string;
+  clean: boolean; // true if no wagon condition or cargo was lost
 }
 
 function severity(crossing: RiverCrossing): number {
@@ -24,16 +25,16 @@ export function assessCrossingRisk(state: GameState, crossing: RiverCrossing, me
   if (method === "ford") {
     const base = (risk / 55) * 100;
     const factors = factorsOf(roleDangerReduction(state, "scout", "Scout", 35));
-    return assessChance(base, factors, "danger");
+    return assessChanceFor(state, base, factors, "danger");
   }
   if (method === "caulk_float") {
     const base = (risk / 90) * 100;
     const factors = factorsOf(roleDangerReduction(state, "wainwright", "Wainwright", 35));
-    return assessChance(base, factors, "danger");
+    return assessChanceFor(state, base, factors, "danger");
   }
   if (method === "guide") {
     const base = (risk / 200) * 100;
-    return assessChance(base, [], "danger");
+    return assessChanceFor(state, base, [], "danger");
   }
   return null;
 }
@@ -45,31 +46,35 @@ export function attemptCrossing(
   rng: () => number
 ): CrossingResult {
   if (method === "ferry") {
-    if (!crossing.hasFerry) return { success: false, narrative: "There's no ferry operating here." };
-    if (draft.cash < crossing.ferryCost) return { success: false, narrative: "You can't afford the ferry fee." };
+    if (!crossing.hasFerry) return { success: false, narrative: "There's no ferry operating here.", clean: true };
+    if (draft.cash < crossing.ferryCost) return { success: false, narrative: "You can't afford the ferry fee.", clean: true };
     draft.cash -= crossing.ferryCost;
     pushLog(draft, `Paid $${crossing.ferryCost} for the ferry across ${crossing.name}.`, "info");
-    return { success: true, narrative: "The ferry carries you safely across, wagon and all." };
+    return { success: true, narrative: "The ferry carries you safely across, wagon and all.", clean: true };
   }
 
+  if (method === "wait") {
+    pushLog(draft, "You make camp and wait for the river to calm.", "info");
+    return { success: true, narrative: "You wait a day. The water may be calmer tomorrow.", clean: false };
+  }
+
+  const wagonBefore = draft.wagonCondition;
+  const weightBefore = totalWeight(draft);
+  const wasClean = () => draft.wagonCondition >= wagonBefore - 0.01 && totalWeight(draft) >= weightBefore - 0.01;
+
   if (method === "guide") {
-    if (!crossing.hasGuide) return { success: false, narrative: "No guide is available here." };
-    if (draft.cash < crossing.guideCost) return { success: false, narrative: "You can't afford the guide's fee." };
+    if (!crossing.hasGuide) return { success: false, narrative: "No guide is available here.", clean: true };
+    if (draft.cash < crossing.guideCost) return { success: false, narrative: "You can't afford the guide's fee.", clean: true };
     draft.cash -= crossing.guideCost;
     const assessment = assessCrossingRisk(draft, crossing, "guide")!;
     if (rollAgainst(assessment, rng)) {
       const lost = Math.min(getItemQty(draft, "flour"), randInt(rng, 5, 20));
       removeItem(draft, "flour", lost);
       pushLog(draft, `Even with a guide, ${crossing.name} claims some supplies.`, "bad");
-      return { success: true, narrative: "Even with a guide's help, the crossing is rough and you lose some supplies." };
+      return { success: true, narrative: "Even with a guide's help, the crossing is rough and you lose some supplies.", clean: wasClean() };
     }
     pushLog(draft, `A hired guide brings you safely across ${crossing.name}.`, "good");
-    return { success: true, narrative: "The guide knows every rock and eddy. You cross without incident." };
-  }
-
-  if (method === "wait") {
-    pushLog(draft, "You make camp and wait for the river to calm.", "info");
-    return { success: true, narrative: "You wait a day. The water may be calmer tomorrow." };
+    return { success: true, narrative: "The guide knows every rock and eddy. You cross without incident.", clean: wasClean() };
   }
 
   // ford or caulk_float
@@ -94,9 +99,16 @@ export function attemptCrossing(
       }
     }
     pushLog(draft, `The crossing at ${crossing.name} goes badly. Supplies and wagon condition are lost.`, "bad");
-    return { success: true, narrative: `The current catches the wagon. You make it across, but not without paying a price.` };
+    return { success: true, narrative: `The current catches the wagon. You make it across, but not without paying a price.`, clean: false };
   }
 
   pushLog(draft, `You cross ${crossing.name} without serious trouble.`, "good");
-  return { success: true, narrative: "With care and effort, you make it to the far bank safely." };
+  if (method === "ford") {
+    const scout = partyHasRole(draft, "scout");
+    if (scout) gainSkill(draft, scout, 1, "Scout");
+  } else {
+    const wainwright = partyHasRole(draft, "wainwright");
+    if (wainwright) gainSkill(draft, wainwright, 1, "Wainwright");
+  }
+  return { success: true, narrative: "With care and effort, you make it to the far bank safely.", clean: true };
 }

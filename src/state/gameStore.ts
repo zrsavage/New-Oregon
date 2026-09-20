@@ -10,7 +10,7 @@ import type {
   RiverCrossingMethod,
   WagonTypeId,
 } from "../types/game";
-import { createNewGame, STARTING_CASH } from "../systems/init";
+import { createNewGame, PRACTICE_CASH, PRACTICE_TARGET_MILE, STARTING_CASH } from "../systems/init";
 import { mulberry32 } from "../systems/rng";
 import { generateHirePool } from "../systems/character";
 import { TRAIL_BY_ID } from "../data/trail";
@@ -20,6 +20,7 @@ import { computeDailyMiles, tickDay, wagonCapacity } from "../systems/travel";
 import { maybeTriggerEvent, resolveEventChoice } from "../systems/eventEngine";
 import { arriveAtLandmark, checkEnding } from "../systems/progress";
 import { attemptCrossing } from "../systems/river";
+import { applyAchievements } from "../systems/achievements";
 import { clamp, livingParty, pushLog, totalWeight } from "../systems/mutators";
 
 let rng = mulberry32(Date.now() % 2147483647);
@@ -31,6 +32,7 @@ interface StoreExtra {
 
 interface StoreActions {
   startNewGame: (leaderName: string) => void;
+  startPracticeRun: (leaderName: string) => void;
   resetToTitle: () => void;
 
   setWagonType: (id: WagonTypeId) => void;
@@ -57,26 +59,33 @@ interface StoreActions {
   tradeBuy: (itemId: string, qty: number) => void;
   tradeSell: (itemId: string, qty: number) => void;
   repairWagon: () => void;
+  settleDown: () => void;
 
   clearNarratives: () => void;
 }
 
 export type Store = GameState & StoreExtra & StoreActions;
 
-function fresh(leaderName: string): GameState {
+function fresh(leaderName: string, isPractice = false): GameState {
   const seed = Math.floor(Math.random() * 2147483647);
   rng = mulberry32(seed);
-  return createNewGame(leaderName, seed);
+  return createNewGame(leaderName, seed, isPractice);
 }
 
-/** Applies an immer recipe to the GameState slice of the store and commits it in one set() call. */
+/**
+ * Applies an immer recipe to the GameState slice of the store, evaluates
+ * achievements against the result, and commits it in one set() call.
+ */
 function mutate(
   set: (partial: Partial<Store>) => void,
   get: () => Store,
   recipe: (draft: GameState) => void
 ): GameState {
   const current = get();
-  const next = produce<GameState>(current, recipe);
+  const next = produce<GameState>(current, (draft) => {
+    recipe(draft);
+    applyAchievements(draft);
+  });
   set(next);
   return next;
 }
@@ -91,6 +100,11 @@ export const useGameStore = create<Store>()(
 
       startNewGame: (leaderName) => {
         set({ ...fresh(leaderName), phase: "outfitting" });
+        get().refreshHirePool();
+      },
+
+      startPracticeRun: (leaderName) => {
+        set({ ...fresh(leaderName, true), phase: "outfitting" });
         get().refreshHirePool();
       },
 
@@ -250,7 +264,10 @@ export const useGameStore = create<Store>()(
             checkEnding(d);
             return;
           }
-          if (result.success) d.pendingRiverCrossing = false;
+          if (result.success) {
+            d.pendingRiverCrossing = false;
+            if (result.clean) d.cleanRiverCrossings += 1;
+          }
           checkEnding(d);
         });
         set({ lastCrossingNarrative: narrative });
@@ -278,6 +295,15 @@ export const useGameStore = create<Store>()(
           pushLog(d, `Paid $${cost.toFixed(2)} to repair the wagon at ${landmark.name}.`, "good");
         }),
 
+      settleDown: () =>
+        mutate(set, get, (d) => {
+          const landmark = TRAIL_BY_ID[d.currentLandmarkId];
+          if (!landmark?.hasFort || d.currentLandmarkId === "independence") return;
+          d.ending = "settled";
+          d.phase = "ending";
+          pushLog(d, `You settle down at ${landmark.name}, ending your journey west.`, "good");
+        }),
+
       clearNarratives: () => set({ lastEventNarrative: null, lastCrossingNarrative: null }),
     }),
     {
@@ -300,4 +326,4 @@ export function selectLivingParty(state: GameState): Character[] {
 export const START_CASH = STARTING_CASH;
 export const ALL_WAGON_TYPES = Object.values(WAGON_TYPES);
 export const ALL_DRAFT_ANIMALS = Object.values(DRAFT_ANIMALS);
-export { outfittingCost };
+export { outfittingCost, PRACTICE_CASH, PRACTICE_TARGET_MILE };

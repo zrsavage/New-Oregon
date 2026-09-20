@@ -7,6 +7,19 @@ export function assessChance(base: number, factors: RiskFactor[], frame: "succes
   return { chance: clamp(Math.round(total), 2, 98), frame, base: Math.round(base), factors };
 }
 
+/** Same as assessChance, but eases the odds in the player's favor during a practice run. */
+export function assessChanceFor(
+  state: GameState,
+  base: number,
+  factors: RiskFactor[],
+  frame: "success" | "danger"
+): RiskAssessment {
+  const assessment = assessChance(base, factors, frame);
+  if (!state.isPractice) return assessment;
+  const eased = frame === "success" ? assessment.chance + 15 : assessment.chance - 15;
+  return { ...assessment, chance: clamp(eased, 2, 98) };
+}
+
 /** Rolls the outcome an assessment describes: true means the framed event happens. */
 export function rollAgainst(assessment: RiskAssessment, rng: () => number): boolean {
   return rng() * 100 < assessment.chance;

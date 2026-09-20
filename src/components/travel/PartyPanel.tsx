@@ -22,7 +22,9 @@ export default function PartyPanel() {
             <div className="party-compact-name">
               {c.name}
               {c.isLeader ? " (You)" : ""}
-              <span className="party-compact-role">{ROLES[c.role].name}</span>
+              <span className="party-compact-role">
+                {ROLES[c.role].name} · Skill {c.skillLevel}
+              </span>
             </div>
             <div className="bar-track" title={`Health ${Math.round(c.health)}`}>
               <div className="bar-fill health" style={{ width: `${c.health}%` }} />

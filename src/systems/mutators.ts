@@ -103,3 +103,17 @@ export function skillFor(state: GameState, role: Character["role"]): number {
   const person = partyHasRole(state, role);
   return person ? person.skillLevel : 0;
 }
+
+/**
+ * Grows a party member's skill through use. Logs a note only when they cross
+ * a 5-point tier, so routine +1/+2 gains don't spam the trail log.
+ */
+export function gainSkill(draft: GameState, person: Character, amount: number, roleLabel: string) {
+  const before = person.skillLevel;
+  person.skillLevel = clamp(person.skillLevel + amount, 0, 100);
+  const beforeTier = Math.floor(before / 5);
+  const afterTier = Math.floor(person.skillLevel / 5);
+  if (afterTier > beforeTier) {
+    pushLog(draft, `${person.name} grows more skilled as a ${roleLabel} (skill ${person.skillLevel}).`, "good");
+  }
+}

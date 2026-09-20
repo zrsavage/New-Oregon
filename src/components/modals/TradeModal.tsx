@@ -34,6 +34,11 @@ export default function TradeModal() {
     <div className="modal-backdrop">
       <div className="modal trade-modal">
         <h2>Trading Post — {landmark?.name}</h2>
+        {landmark?.keeper && (
+          <p className="keeper-blurb">
+            <strong>{landmark.keeper.name}</strong> minds the counter here. {landmark.keeper.blurb}
+          </p>
+        )}
         <p>Cash: ${state.cash.toFixed(2)}</p>
         <div className="trade-scroll">
           {CATEGORY_ORDER.map((cat) => (

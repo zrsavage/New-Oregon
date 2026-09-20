@@ -1,6 +1,7 @@
 import type { GameState } from "../types/game";
 import { ITEMS } from "../data/items";
 import { WAGON_TYPES, DRAFT_ANIMALS } from "../data/wagonsAndAnimals";
+import { TRAIL_BY_ID } from "../data/trail";
 import { addItem, pushLog, removeItem, skillFor } from "./mutators";
 
 export function outfittingCost(state: GameState): { wagon: number; animals: number; total: number } {
@@ -10,13 +11,15 @@ export function outfittingCost(state: GameState): { wagon: number; animals: numb
 }
 
 // Prices swing per-fort so trading isn't static; seeded off mile marker for determinism.
+// Each fort keeper also nudges prices up or down with their own personality/temperament.
 export function priceAt(state: GameState, itemId: string): number {
   const def = ITEMS[itemId];
   if (!def) return 0;
   const wobble = Math.sin(state.mile * 0.017 + itemId.length) * 0.15;
   const merchantSkill = skillFor(state, "merchant");
   const merchantDiscount = 1 - merchantSkill / 500; // up to ~17% better prices
-  return Math.max(0.01, def.basePrice * (1 + wobble) * merchantDiscount);
+  const keeperModifier = TRAIL_BY_ID[state.currentLandmarkId]?.keeper?.priceModifier ?? 1;
+  return Math.max(0.01, def.basePrice * (1 + wobble) * merchantDiscount * keeperModifier);
 }
 
 export function buyItem(draft: GameState, itemId: string, qty: number): boolean {

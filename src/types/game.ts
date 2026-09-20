@@ -157,6 +157,12 @@ export interface TrailFork {
   }[];
 }
 
+export interface FortKeeper {
+  name: string;
+  blurb: string;
+  priceModifier: number; // multiplier applied to prices at this fort, e.g. 0.92 = 8% cheaper
+}
+
 export interface Landmark {
   id: string;
   name: string;
@@ -167,6 +173,7 @@ export interface Landmark {
   riverCrossing?: RiverCrossing;
   fork?: TrailFork;
   notes?: string;
+  keeper?: FortKeeper;
   // Explicit graph pointer to the next landmark. Undefined means "end of trail"
   // or "must be resolved via fork". Branch legs use this to merge back onto the
   // main line at a point that may not be adjacent in the display list.
@@ -194,7 +201,9 @@ export type EndingReason =
   | "arrived"
   | "leader_died"
   | "party_wiped"
-  | "starved_stranded";
+  | "starved_stranded"
+  | "settled"
+  | "practice_complete";
 
 /** A single contribution to a risk assessment, e.g. a party member's skill or a trait. */
 export interface RiskFactor {
@@ -291,4 +300,14 @@ export interface GameState {
 
   // Outfitting-only scratch data (irrelevant once travel begins).
   hirePool: Character[];
+
+  // Achievements earned so far THIS run (see state/achievementsStore.ts for
+  // the cross-run persisted set).
+  runAchievements: string[];
+  // River crossings completed with no loss of wagon condition or supplies.
+  cleanRiverCrossings: number;
+
+  // A short, low-stakes trial run: generous cash, eased odds, a shorter
+  // trail target, and no permanent achievement unlocks.
+  isPractice: boolean;
 }

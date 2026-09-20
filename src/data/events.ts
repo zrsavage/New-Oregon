@@ -1,6 +1,6 @@
 import type { EventDef, GameState, RiskAssessment } from "../types/game";
-import { addItem, adjustHealth, adjustMorale, afflict, getItemQty, livingParty, pushLog, removeItem, skillFor } from "../systems/mutators";
-import { assessChance, factorsOf, roleDangerReduction, roleFactor, rollAgainst, traitFactor } from "../systems/risk";
+import { addItem, adjustHealth, adjustMorale, afflict, gainSkill, getItemQty, livingParty, partyHasRole, pushLog, removeItem, skillFor } from "../systems/mutators";
+import { assessChanceFor, factorsOf, roleDangerReduction, roleFactor, rollAgainst, traitFactor } from "../systems/risk";
 import { randInt } from "../systems/rng";
 import { ITEMS } from "./items";
 
@@ -40,17 +40,17 @@ function wainwrightRepairRisk(state: GameState): RiskAssessment {
     roleFactor(state, "wainwright", "Wainwright", 65),
     traitFactor(state, "steady_hands", "Steady Hands", 12)
   );
-  return assessChance(15, factors, "success");
+  return assessChanceFor(state, 15, factors, "success");
 }
 
 function riverScareCrossRisk(state: GameState): RiskAssessment {
   const factors = factorsOf(roleFactor(state, "scout", "Scout", 35), traitFactor(state, "tough", "Tough", 5));
-  return assessChance(50, factors, "success");
+  return assessChanceFor(state, 50, factors, "success");
 }
 
 function dysenteryTreatRisk(state: GameState): RiskAssessment {
   const factors = factorsOf(roleFactor(state, "healer", "Healer", 45));
-  return assessChance(45, factors, "success");
+  return assessChanceFor(state, 45, factors, "success");
 }
 
 function axleDescentRisk(state: GameState): RiskAssessment {
@@ -58,42 +58,42 @@ function axleDescentRisk(state: GameState): RiskAssessment {
     roleDangerReduction(state, "teamster", "Teamster", 25),
     roleDangerReduction(state, "wainwright", "Wainwright", 15)
   );
-  return assessChance(35, factors, "danger");
+  return assessChanceFor(state, 35, factors, "danger");
 }
 
 function grassFireFleeRisk(state: GameState): RiskAssessment {
   const factors = factorsOf(roleDangerReduction(state, "teamster", "Teamster", 15));
-  return assessChance(20, factors, "danger");
+  return assessChanceFor(state, 20, factors, "danger");
 }
 
 function grassFireBackfireRisk(state: GameState): RiskAssessment {
   const factors = factorsOf(roleFactor(state, "farmer", "Farmer", 55));
-  return assessChance(30, factors, "success");
+  return assessChanceFor(state, 30, factors, "success");
 }
 
 function lostTrailScoutRisk(state: GameState): RiskAssessment {
   const factors = factorsOf(roleFactor(state, "scout", "Scout", 55));
-  return assessChance(35, factors, "success");
+  return assessChanceFor(state, 35, factors, "success");
 }
 
 function coldSnapHuddleRisk(state: GameState): RiskAssessment {
   const factors = factorsOf(traitFactor(state, "tough", "Tough", -8));
-  return assessChance(15, factors, "danger");
+  return assessChanceFor(state, 15, factors, "danger");
 }
 
 function theftWatchRisk(state: GameState): RiskAssessment {
   const factors = factorsOf(roleFactor(state, "scout", "Scout", 50));
-  return assessChance(10, factors, "success");
+  return assessChanceFor(state, 10, factors, "success");
 }
 
 function typhoidTreatRisk(state: GameState): RiskAssessment {
   const factors = factorsOf(roleFactor(state, "healer", "Healer", 55));
-  return assessChance(25, factors, "success");
+  return assessChanceFor(state, 25, factors, "success");
 }
 
 function wagonFireDouseRisk(state: GameState): RiskAssessment {
   const factors = factorsOf(roleFactor(state, "cook", "Cook", 20));
-  return assessChance(45, factors, "success");
+  return assessChanceFor(state, 45, factors, "success");
 }
 
 export const EVENTS: EventDef[] = [
@@ -127,6 +127,8 @@ export const EVENTS: EventDef[] = [
           if (rollAgainst(wainwrightRepairRisk(draft), rng)) {
             draft.wagonCondition = Math.min(100, draft.wagonCondition + 5);
             pushLog(draft, "Your wainwright repairs the wheel expertly.", "good");
+            const wainwright = partyHasRole(draft, "wainwright");
+            if (wainwright) gainSkill(draft, wainwright, 2, "Wainwright");
             return "Your wainwright saws, shaves, and fits new spokes. The wheel is as good as new.";
           }
           draft.wagonCondition = Math.max(0, draft.wagonCondition - 10);
@@ -201,6 +203,8 @@ export const EVENTS: EventDef[] = [
           addItem(draft, "fresh_meat", yieldLbs);
           adjustMorale(draft, 4);
           pushLog(draft, `A successful hunt brings in ${yieldLbs} lbs of fresh meat.`, "good");
+          const hunter = partyHasRole(draft, "hunter");
+          if (hunter) gainSkill(draft, hunter, 1, "Hunter");
           return `The hunt succeeds — ${yieldLbs} lbs of fresh meat, and the party's spirits lift.`;
         },
       },
@@ -236,6 +240,8 @@ export const EVENTS: EventDef[] = [
             adjustHealth(victim, -5);
             afflict(victim, "dysentery", 2);
             pushLog(draft, `${victim.name} is treated quickly and shakes off dysentery.`, "good");
+            const healer = partyHasRole(draft, "healer");
+            if (healer) gainSkill(draft, healer, 2, "Healer");
             return `${victim.name} is dosed and rested. The illness passes quickly.`;
           }
           adjustHealth(victim, -15);
@@ -299,6 +305,8 @@ export const EVENTS: EventDef[] = [
             return "Halfway down, the axle cracks under the load. You'll need to repair it.";
           }
           pushLog(draft, "A tense but successful descent.", "good");
+          const teamster = partyHasRole(draft, "teamster");
+          if (teamster) gainSkill(draft, teamster, 1, "Teamster");
           return "The team holds steady and you make it down without damage.";
         },
       },
@@ -366,6 +374,8 @@ export const EVENTS: EventDef[] = [
         effect: (draft, rng) => {
           if (rollAgainst(grassFireBackfireRisk(draft), rng)) {
             pushLog(draft, "A well-set backfire saves the wagon without a scramble.", "good");
+            const farmer = partyHasRole(draft, "farmer");
+            if (farmer) gainSkill(draft, farmer, 2, "Farmer");
             return "Your farmer knows the old trick — a controlled backfire burns a safe patch of ground just in time.";
           }
           draft.wagonCondition = Math.max(0, draft.wagonCondition - 15);
@@ -390,6 +400,8 @@ export const EVENTS: EventDef[] = [
         effect: (draft, rng) => {
           if (rollAgainst(lostTrailScoutRisk(draft), rng)) {
             pushLog(draft, "Your scout finds the trail again quickly.", "good");
+            const scout = partyHasRole(draft, "scout");
+            if (scout) gainSkill(draft, scout, 2, "Scout");
             return "Your scout rides ahead and picks up the trail markers within the hour.";
           }
           draft.milesToday = Math.max(0, draft.milesToday - 4);
@@ -504,6 +516,8 @@ export const EVENTS: EventDef[] = [
         effect: (draft, rng) => {
           if (rollAgainst(theftWatchRisk(draft), rng)) {
             pushLog(draft, "Your watch catches the thief before they get away with anything.", "good");
+            const scout = partyHasRole(draft, "scout");
+            if (scout) gainSkill(draft, scout, 2, "Scout");
             return "A sharp-eyed watch spots the intruder before they can make off with anything.";
           }
           const stolen = stealFood(draft, rng, 5, 20);
@@ -631,6 +645,8 @@ export const EVENTS: EventDef[] = [
           addItem(draft, "dried_fruit", amount);
           adjustMorale(draft, 3);
           pushLog(draft, `Foraging brings in ${amount} lbs of fruit.`, "good");
+          const farmer = partyHasRole(draft, "farmer");
+          if (farmer) gainSkill(draft, farmer, 1, "Farmer");
           return `A pleasant break from the trail nets ${amount} lbs of fruit, and a boost in spirits.`;
         },
       },
@@ -655,6 +671,8 @@ export const EVENTS: EventDef[] = [
         effect: (draft, rng) => {
           if (rollAgainst(wagonFireDouseRisk(draft), rng)) {
             pushLog(draft, "The fire is put out before it spreads.", "good");
+            const cook = partyHasRole(draft, "cook");
+            if (cook) gainSkill(draft, cook, 1, "Cook");
             return "Quick thinking with the water barrel puts the fire out before it spreads.";
           }
           if (!removeItem(draft, "canvas", 1)) {
@@ -693,6 +711,10 @@ export const EVENTS: EventDef[] = [
           const quickRecovery = rollAgainst(typhoidTreatRisk(draft), rng);
           afflict(victim, "typhoid", quickRecovery ? 3 : 6);
           pushLog(draft, `${victim.name} is treated for typhoid fever.`, "bad");
+          if (quickRecovery) {
+            const healer = partyHasRole(draft, "healer");
+            if (healer) gainSkill(draft, healer, 2, "Healer");
+          }
           return `${victim.name} is dosed with quinine. It's serious, but treatable.`;
         },
       },

@@ -146,6 +146,53 @@ h1, h2, h3, h4 {
   color: var(--ink-soft);
   line-height: 1.5;
 }
+.title-button-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.achievements-link {
+  margin-top: 16px;
+}
+.achievements-panel {
+  text-align: left;
+}
+.achievements-panel h2 {
+  text-align: center;
+}
+.achievements-list {
+  list-style: none;
+  margin: 12px 0;
+  padding: 0;
+  max-height: 360px;
+  overflow-y: auto;
+}
+.achievements-list li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 8px 0;
+  border-bottom: 1px dotted #d0bd94;
+}
+.achievement-icon {
+  font-size: 1.2em;
+  color: var(--gold);
+  flex-shrink: 0;
+}
+.achievements-list li.locked .achievement-icon {
+  color: #b3a074;
+}
+.achievements-list li.locked .achievement-text {
+  opacity: 0.55;
+}
+.achievement-text {
+  display: flex;
+  flex-direction: column;
+}
+.achievement-desc {
+  font-size: 0.85em;
+  color: var(--ink-soft);
+}
 
 /* ---------- Tabs ---------- */
 .tab-bar {
@@ -336,6 +383,16 @@ h1, h2, h3, h4 {
 }
 
 /* ---------- Travel screen ---------- */
+.practice-badge {
+  background: #dce8d0;
+  border: 2px solid var(--leaf);
+  border-radius: var(--radius);
+  padding: 8px 14px;
+  margin-bottom: 12px;
+  font-size: 0.85em;
+  color: var(--ink-soft);
+  text-align: center;
+}
 .trail-map {
   background: var(--paper-dark);
   border: 2px solid var(--wood);
@@ -364,6 +421,12 @@ h1, h2, h3, h4 {
   top: -22px;
   transform: translateX(-50%);
   font-size: 1.3em;
+  transition: left 0.8s ease-in-out;
+  animation: wagon-bob 1.6s ease-in-out infinite;
+}
+@keyframes wagon-bob {
+  0%, 100% { transform: translateX(-50%) translateY(0) rotate(0deg); }
+  50% { transform: translateX(-50%) translateY(-2px) rotate(-4deg); }
 }
 .trail-marker {
   position: absolute;
@@ -387,7 +450,12 @@ h1, h2, h3, h4 {
 }
 .trail-marker.current .trail-dot {
   background: var(--rust);
-  box-shadow: 0 0 0 3px rgba(139, 58, 47, 0.3);
+  animation: marker-pulse 1.8s ease-out infinite;
+}
+@keyframes marker-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(139, 58, 47, 0.45); }
+  70% { box-shadow: 0 0 0 8px rgba(139, 58, 47, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(139, 58, 47, 0); }
 }
 .trail-marker.fort .trail-dot {
   border-color: var(--gold);
@@ -520,6 +588,15 @@ h1, h2, h3, h4 {
   gap: 8px;
   flex-wrap: wrap;
 }
+.settle-row {
+  align-items: center;
+  border-top: 1px dashed var(--wood);
+  padding-top: 10px;
+}
+.settle-confirm-text {
+  font-size: 0.85em;
+  color: var(--ink-soft);
+}
 
 .log-panel {
   max-height: 260px;
@@ -585,6 +662,11 @@ h1, h2, h3, h4 {
   max-height: 85vh;
   overflow-y: auto;
   box-shadow: 6px 6px 0 var(--shadow);
+  animation: modal-in 0.22s ease-out;
+}
+@keyframes modal-in {
+  from { opacity: 0; transform: scale(0.96) translateY(6px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
 }
 .modal-choices {
   display: flex;
@@ -635,6 +717,12 @@ h1, h2, h3, h4 {
 .risk-factors li.bad {
   color: var(--bad);
 }
+.keeper-blurb {
+  font-style: italic;
+  color: var(--ink-soft);
+  font-size: 0.9em;
+  margin-top: -6px;
+}
 .trade-scroll {
   max-height: 50vh;
   overflow-y: auto;
@@ -646,6 +734,66 @@ h1, h2, h3, h4 {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+.achievements-earned {
+  background: #f0e2bd;
+  border: 2px solid var(--gold);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  text-align: left;
+}
+.achievements-earned h4 {
+  color: var(--wood-dark);
+  margin-bottom: 6px;
+}
+.achievements-earned ul {
+  margin: 0;
+  padding-left: 18px;
+}
+.achievements-earned li {
+  margin-bottom: 4px;
+}
+
+/* ---------- Weather FX ---------- */
+.weather-fx {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 1;
+}
+.weather-particle {
+  position: absolute;
+  top: -5%;
+  width: 2px;
+  height: 14px;
+  background: rgba(90, 120, 160, 0.5);
+  animation-name: fall-rain;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+.weather-fx.snow .weather-particle {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  animation-name: fall-snow;
+}
+.weather-fx.heavy .weather-particle {
+  opacity: 0.85;
+}
+.weather-fx.light .weather-particle {
+  opacity: 0.45;
+}
+@keyframes fall-rain {
+  from { transform: translateY(0); }
+  to { transform: translateY(110vh); }
+}
+@keyframes fall-snow {
+  0% { transform: translate(0, 0); }
+  50% { transform: translate(15px, 55vh); }
+  100% { transform: translate(-10px, 110vh); }
 }
 
 /* ---------- Responsive ---------- */

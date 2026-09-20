@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useGameStore } from "../../state/gameStore";
 import { TRAIL_BY_ID } from "../../data/trail";
 import type { Pace, Rations } from "../../types/game";
@@ -23,9 +24,12 @@ export default function ControlsPanel() {
   const restDay = useGameStore((s) => s.restDay);
   const openTrade = useGameStore((s) => s.openTrade);
   const repairWagon = useGameStore((s) => s.repairWagon);
+  const settleDown = useGameStore((s) => s.settleDown);
   const currentLandmarkId = useGameStore((s) => s.currentLandmarkId);
   const wagonCondition = useGameStore((s) => s.wagonCondition);
   const cash = useGameStore((s) => s.cash);
+  const isPractice = useGameStore((s) => s.isPractice);
+  const [confirmingSettle, setConfirmingSettle] = useState(false);
 
   const blocked = useGameStore(
     (s) => !!(s.pendingEvent || s.pendingFork || s.pendingRiverCrossing || s.pendingTrade)
@@ -33,6 +37,7 @@ export default function ControlsPanel() {
 
   const landmark = TRAIL_BY_ID[currentLandmarkId];
   const repairCost = Math.round((100 - wagonCondition) * 0.6 * 100) / 100;
+  const canSettle = !isPractice && landmark?.hasFort && currentLandmarkId !== "independence";
 
   return (
     <div className="panel controls-panel">
@@ -96,6 +101,26 @@ export default function ControlsPanel() {
           >
             Repair Wagon (${repairCost.toFixed(2)})
           </button>
+        </div>
+      )}
+
+      {canSettle && (
+        <div className="control-group action-row settle-row">
+          {!confirmingSettle ? (
+            <button className="btn" disabled={blocked} onClick={() => setConfirmingSettle(true)}>
+              Settle Here
+            </button>
+          ) : (
+            <>
+              <span className="settle-confirm-text">End your journey at {landmark!.name}?</span>
+              <button className="btn danger" onClick={settleDown}>
+                Yes, Settle Here
+              </button>
+              <button className="btn" onClick={() => setConfirmingSettle(false)}>
+                Cancel
+              </button>
+            </>
+          )}
         </div>
       )}
     </div>

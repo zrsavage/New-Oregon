@@ -2,14 +2,16 @@ import type { GameState } from "../types/game";
 import { createLeader } from "./character";
 
 export const STARTING_CASH = 1600;
+export const PRACTICE_CASH = 6000;
+export const PRACTICE_TARGET_MILE = 150;
 
-export function createNewGame(leaderName: string, seed: number): GameState {
+export function createNewGame(leaderName: string, seed: number, isPractice = false): GameState {
   return {
     phase: "outfitting",
     seed,
     leaderName,
     party: [createLeader(leaderName)],
-    cash: STARTING_CASH,
+    cash: isPractice ? PRACTICE_CASH : STARTING_CASH,
 
     wagonType: "standard",
     wagonCondition: 100,
@@ -41,5 +43,9 @@ export function createNewGame(leaderName: string, seed: number): GameState {
     ending: null,
 
     hirePool: [],
+
+    runAchievements: [],
+    cleanRiverCrossings: 0,
+    isPractice,
   };
 }
