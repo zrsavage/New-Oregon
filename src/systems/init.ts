@@ -38,6 +38,7 @@ export function createNewGame(leaderName: string, seed: number, isPractice = fal
     pendingRiverCrossing: false,
     pendingFork: false,
     pendingTrade: false,
+    pendingHunt: false,
 
     log: [],
     ending: null,

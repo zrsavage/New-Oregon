@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useGameStore } from "../../state/gameStore";
 import { TRAIL_BY_ID } from "../../data/trail";
+import { huntingBlockedReason } from "../../systems/hunting";
 import type { Pace, Rations } from "../../types/game";
 
 const PACE_OPTIONS: { id: Pace; label: string; hint: string }[] = [
@@ -16,6 +17,7 @@ const RATIONS_OPTIONS: { id: Rations; label: string; hint: string }[] = [
 ];
 
 export default function ControlsPanel() {
+  const state = useGameStore();
   const pace = useGameStore((s) => s.pace);
   const rations = useGameStore((s) => s.rations);
   const setPace = useGameStore((s) => s.setPace);
@@ -23,6 +25,7 @@ export default function ControlsPanel() {
   const travelDay = useGameStore((s) => s.travelDay);
   const restDay = useGameStore((s) => s.restDay);
   const openTrade = useGameStore((s) => s.openTrade);
+  const openHunt = useGameStore((s) => s.openHunt);
   const repairWagon = useGameStore((s) => s.repairWagon);
   const settleDown = useGameStore((s) => s.settleDown);
   const currentLandmarkId = useGameStore((s) => s.currentLandmarkId);
@@ -32,12 +35,13 @@ export default function ControlsPanel() {
   const [confirmingSettle, setConfirmingSettle] = useState(false);
 
   const blocked = useGameStore(
-    (s) => !!(s.pendingEvent || s.pendingFork || s.pendingRiverCrossing || s.pendingTrade)
+    (s) => !!(s.pendingEvent || s.pendingFork || s.pendingRiverCrossing || s.pendingTrade || s.pendingHunt)
   );
 
   const landmark = TRAIL_BY_ID[currentLandmarkId];
   const repairCost = Math.round((100 - wagonCondition) * 0.6 * 100) / 100;
   const canSettle = !isPractice && landmark?.hasFort && currentLandmarkId !== "independence";
+  const huntBlockReason = huntingBlockedReason(state);
 
   return (
     <div className="panel controls-panel">
@@ -86,6 +90,14 @@ export default function ControlsPanel() {
         </button>
         <button className="btn" disabled={blocked} onClick={() => restDay(1)}>
           Rest 1 Day
+        </button>
+        <button
+          className="btn"
+          disabled={blocked || !!huntBlockReason}
+          title={huntBlockReason ?? "Spend the day hunting for fresh meat"}
+          onClick={openHunt}
+        >
+          Go Hunting
         </button>
       </div>
 

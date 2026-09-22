@@ -294,6 +294,7 @@ export interface GameState {
   pendingRiverCrossing: boolean;
   pendingFork: boolean;
   pendingTrade: boolean;
+  pendingHunt: boolean;
 
   log: LogEntry[];
   ending: EndingReason | null;

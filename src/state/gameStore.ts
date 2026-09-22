@@ -21,6 +21,7 @@ import { maybeTriggerEvent, resolveEventChoice } from "../systems/eventEngine";
 import { arriveAtLandmark, checkEnding } from "../systems/progress";
 import { attemptCrossing } from "../systems/river";
 import { applyAchievements } from "../systems/achievements";
+import { huntingBlockedReason, resolveHunt } from "../systems/hunting";
 import { clamp, livingParty, pushLog, totalWeight } from "../systems/mutators";
 
 let rng = mulberry32(Date.now() % 2147483647);
@@ -28,6 +29,7 @@ let rng = mulberry32(Date.now() % 2147483647);
 interface StoreExtra {
   lastEventNarrative: string | null;
   lastCrossingNarrative: string | null;
+  lastHuntNarrative: string | null;
 }
 
 interface StoreActions {
@@ -60,6 +62,10 @@ interface StoreActions {
   tradeSell: (itemId: string, qty: number) => void;
   repairWagon: () => void;
   settleDown: () => void;
+
+  openHunt: () => void;
+  closeHunt: () => void;
+  resolveHuntChoice: (targetId: string) => void;
 
   clearNarratives: () => void;
 }
@@ -97,6 +103,7 @@ export const useGameStore = create<Store>()(
       phase: "title",
       lastEventNarrative: null,
       lastCrossingNarrative: null,
+      lastHuntNarrative: null,
 
       startNewGame: (leaderName) => {
         set({ ...fresh(leaderName), phase: "outfitting" });
@@ -168,7 +175,14 @@ export const useGameStore = create<Store>()(
       travelDay: (days = 1) => {
         for (let i = 0; i < days; i++) {
           const s = get();
-          if (s.phase !== "travel" || s.pendingEvent || s.pendingFork || s.pendingRiverCrossing || s.pendingTrade) {
+          if (
+            s.phase !== "travel" ||
+            s.pendingEvent ||
+            s.pendingFork ||
+            s.pendingRiverCrossing ||
+            s.pendingTrade ||
+            s.pendingHunt
+          ) {
             return;
           }
 
@@ -216,7 +230,14 @@ export const useGameStore = create<Store>()(
       restDay: (days = 1) => {
         for (let i = 0; i < days; i++) {
           const s = get();
-          if (s.phase !== "travel" || s.pendingEvent || s.pendingFork || s.pendingRiverCrossing || s.pendingTrade) {
+          if (
+            s.phase !== "travel" ||
+            s.pendingEvent ||
+            s.pendingFork ||
+            s.pendingRiverCrossing ||
+            s.pendingTrade ||
+            s.pendingHunt
+          ) {
             return;
           }
           const next = mutate(set, get, (d) => {
@@ -304,7 +325,26 @@ export const useGameStore = create<Store>()(
           pushLog(d, `You settle down at ${landmark.name}, ending your journey west.`, "good");
         }),
 
-      clearNarratives: () => set({ lastEventNarrative: null, lastCrossingNarrative: null }),
+      openHunt: () =>
+        mutate(set, get, (d) => {
+          if (huntingBlockedReason(d)) return;
+          d.pendingHunt = true;
+        }),
+      closeHunt: () => mutate(set, get, (d) => { d.pendingHunt = false; }),
+
+      resolveHuntChoice: (targetId) => {
+        let narrative = "";
+        mutate(set, get, (d) => {
+          narrative = resolveHunt(d, targetId, rng);
+          d.pendingHunt = false;
+          // A day spent hunting is a day the wagon doesn't move — the team rests/grazes instead.
+          tickDay(d, rng, { resting: true });
+          checkEnding(d);
+        });
+        set({ lastHuntNarrative: narrative });
+      },
+
+      clearNarratives: () => set({ lastEventNarrative: null, lastCrossingNarrative: null, lastHuntNarrative: null }),
     }),
     {
       name: "new-oregon-save",
