@@ -2,8 +2,9 @@ import { useState } from "react";
 import { useGameStore } from "../../state/gameStore";
 import { HUNT_TARGETS, HUNT_TARGETS_BY_ID } from "../../systems/hunting";
 import { getItemQty } from "../../systems/mutators";
+import { currentTerrain } from "../../systems/travel";
 import RiskDisplay from "../shared/RiskDisplay";
-import TimingBar from "../shared/TimingBar";
+import HuntingRange, { type HuntAnimalId } from "../shared/HuntingRange";
 
 export default function HuntModal() {
   const state = useGameStore();
@@ -42,12 +43,11 @@ export default function HuntModal() {
     const target = HUNT_TARGETS_BY_ID[selectedTargetId];
     return (
       <div className="modal-backdrop">
-        <div className="modal hunt-modal">
+        <div className="modal hunt-modal hunt-modal-wide">
           <h2>{target.label}</h2>
-          <p>Line up your shot — click Stop as the marker crosses the sweet spot for a cleaner shot.</p>
-          <TimingBar
-            label="Take aim..."
-            difficulty={target.id === "big_game" ? "hard" : target.id === "deer" ? "medium" : "easy"}
+          <HuntingRange
+            animalId={target.id as HuntAnimalId}
+            terrain={currentTerrain(state)}
             onResolve={(quality) => resolveHuntChoice(target.id, quality)}
           />
         </div>

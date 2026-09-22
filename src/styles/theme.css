@@ -946,6 +946,72 @@ h1, h2, h3, h4 {
   font-weight: 600;
 }
 
+/* ---------- Hunting Range mini-game ---------- */
+.hunt-modal-wide {
+  max-width: 700px;
+}
+.hunting-range {
+  margin-top: 10px;
+}
+.hunting-range-timer {
+  height: 8px;
+  background: var(--paper-dark);
+  border: 2px solid var(--wood);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.hunting-range-timer-fill {
+  height: 100%;
+  background: var(--gold);
+  transition: width 0.05s linear;
+}
+.hunting-range-scene {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 640 / 200;
+  background: #dce6c4;
+  border: 2px solid var(--wood);
+  border-radius: 6px;
+  cursor: crosshair;
+  overflow: visible;
+}
+.hunting-range-animal {
+  filter: url(#sketchy-ink);
+}
+.hunting-range-animal .hunt-animal-body {
+  animation: hunt-gait 0.32s ease-in-out infinite alternate;
+  transform-origin: 0 0;
+}
+@keyframes hunt-gait {
+  from { transform: translateY(0) scaleY(1); }
+  to { transform: translateY(-1.5px) scaleY(1.04); }
+}
+.hunting-reticle {
+  pointer-events: none;
+  transition: opacity 0.1s ease;
+}
+.hunting-reticle circle,
+.hunting-reticle line {
+  stroke: var(--rust);
+}
+.hunt-shot-marker {
+  pointer-events: none;
+}
+.hunt-shot-marker line {
+  stroke: var(--danger);
+}
+.hunt-shot-marker.hit line {
+  stroke: var(--good);
+}
+.hunting-range-hint {
+  margin: 8px 0 0;
+  font-size: 0.85em;
+  color: var(--ink-soft);
+  min-height: 1.2em;
+}
+
 /* ---------- Weather FX ---------- */
 .weather-fx {
   position: fixed;
