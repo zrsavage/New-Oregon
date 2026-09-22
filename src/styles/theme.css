@@ -386,6 +386,53 @@ h1, h2, h3, h4 {
   margin-bottom: 6px;
 }
 
+.provisions-guide {
+  background: var(--paper-dark);
+  border: 2px solid var(--wood);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  margin-bottom: 20px;
+}
+.provisions-guide h4 {
+  margin-bottom: 6px;
+}
+.provisions-guide p {
+  margin: 0 0 10px;
+  line-height: 1.5;
+}
+.provisions-context {
+  font-size: 0.88em;
+  color: var(--ink-soft);
+}
+.provisions-status {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.9em;
+  margin-bottom: 10px;
+}
+.provisions-status.good {
+  background: rgba(62, 107, 47, 0.18);
+  color: var(--good);
+}
+.provisions-status.ok {
+  background: rgba(184, 134, 47, 0.2);
+  color: var(--gold);
+}
+.provisions-status.low {
+  background: rgba(168, 70, 31, 0.18);
+  color: var(--bad);
+}
+.provisions-tips {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  font-size: 0.85em;
+  color: var(--ink-soft);
+}
+.provisions-tips li {
+  margin-bottom: 3px;
+}
+
 /* ---------- Travel screen ---------- */
 .practice-badge {
   background: #dce8d0;
@@ -417,6 +464,7 @@ h1, h2, h3, h4 {
   height: 100%;
   border-radius: 4px;
   overflow: visible;
+  filter: url(#sketchy-ink-wide);
 }
 .trail-wagon-marker {
   position: absolute;
@@ -445,7 +493,7 @@ h1, h2, h3, h4 {
   width: 100%;
   height: 100%;
   fill: currentColor;
-  filter: drop-shadow(0 1px 0.5px rgba(58, 42, 26, 0.4));
+  filter: url(#sketchy-ink) drop-shadow(0 1px 0.5px rgba(58, 42, 26, 0.4));
 }
 .trail-marker.visited {
   color: var(--leaf);
@@ -561,6 +609,9 @@ h1, h2, h3, h4 {
   justify-content: center;
   box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.25);
 }
+.role-icon {
+  filter: url(#sketchy-ink);
+}
 .avatar-icon {
   width: 58%;
   height: 58%;
@@ -615,6 +666,7 @@ h1, h2, h3, h4 {
   display: block;
   margin: 0 0 10px;
   overflow: visible;
+  filter: url(#sketchy-ink);
 }
 .wagon-rig-ground {
   stroke: #b3a074;

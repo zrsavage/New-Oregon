@@ -36,9 +36,9 @@ function AnimalShape({ kind, healthy }: { kind: DraftAnimalId; healthy: boolean 
       {/* neck bridge (helps horses/mules read as connected) */}
       <line x1={bodyCx + p.bodyRx - 4} y1={p.bodyCy - 2} x2={p.headCx - 2} y2={headCy + 2} stroke={p.color} strokeWidth={6} strokeLinecap="round" />
       {/* body */}
-      <ellipse cx={bodyCx} cy={p.bodyCy} rx={p.bodyRx} ry={p.bodyRy} fill={p.color} />
+      <ellipse cx={bodyCx} cy={p.bodyCy} rx={p.bodyRx} ry={p.bodyRy} fill={p.color} stroke={p.darkColor} strokeWidth={1} />
       {/* head */}
-      <circle cx={p.headCx} cy={headCy} r={p.headR} fill={p.color} />
+      <circle cx={p.headCx} cy={headCy} r={p.headR} fill={p.color} stroke={p.darkColor} strokeWidth={1} />
 
       {kind === "oxen" && (
         <>
@@ -181,8 +181,11 @@ export default function WagonRig({
   const animalsWidth = shownCount * spacing + 6;
   const gap = 14;
   const wagon = WAGON_PARAMS[wagonType];
-  const wagonX = animalsWidth + gap;
-  const totalWidth = wagonX + wagon.bodyW + 8;
+  // Animals lead (face forward, toward increasing x) with the wagon trailing
+  // behind them — not the other way around, or they'd appear to be walking
+  // into the back of the wagon instead of pulling it.
+  const animalsX = wagon.bodyW + gap;
+  const totalWidth = animalsX + animalsWidth;
   const healthy = draftAnimalHealth >= 40;
 
   return (
@@ -195,15 +198,18 @@ export default function WagonRig({
       aria-label={`${wagonType} wagon pulled by ${draftAnimalCount} ${draftAnimalType}`}
     >
       <line x1={0} y1={GROUND_Y} x2={totalWidth} y2={GROUND_Y} className="wagon-rig-ground" />
-      <line x1={2} y1={GROUND_Y - 18} x2={wagonX + 2} y2={GROUND_Y - 18} className="wagon-rig-harness" />
-      {Array.from({ length: shownCount }).map((_, i) => (
-        <g key={i} transform={`translate(${i * spacing}, 0)`}>
-          <AnimalShape kind={draftAnimalType} healthy={healthy} />
-        </g>
-      ))}
-      <g transform={`translate(${wagonX}, 0)`}>
+      <line x1={wagon.bodyW - 2} y1={GROUND_Y - 18} x2={animalsX + 2} y2={GROUND_Y - 18} className="wagon-rig-harness" />
+      <g transform="translate(0, 0)">
         <WagonBody type={wagonType} condition={wagonCondition} />
       </g>
+      {Array.from({ length: shownCount }).map((_, i) => {
+        const jitter = ((i * 53) % 7) - 3;
+        return (
+          <g key={i} transform={`translate(${animalsX + i * spacing}, 0) rotate(${jitter} 14 ${GROUND_Y - 8})`}>
+            <AnimalShape kind={draftAnimalType} healthy={healthy} />
+          </g>
+        );
+      })}
       {extra > 0 && (
         <text x={totalWidth - 2} y={VIEW_H - 2} textAnchor="end" className="wagon-rig-extra">
           +{extra} more

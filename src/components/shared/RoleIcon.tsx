@@ -13,9 +13,18 @@ function starPoints(cx: number, cy: number, outerR: number, innerR: number, spik
   return pts.join(" ");
 }
 
+const INK = "#2a1a0f";
+
 /** A small flat glyph representing a party role, drawn from plain SVG primitives (no icon font/library). */
 export default function RoleIcon({ role, className }: { role: Role; className?: string }) {
-  const common = { className, viewBox: "0 0 24 24", fill: "currentColor" } as const;
+  const common = {
+    className: `role-icon ${className ?? ""}`,
+    viewBox: "0 0 24 24",
+    fill: "currentColor",
+    stroke: INK,
+    strokeWidth: 0.7,
+    strokeLinejoin: "round" as const,
+  };
 
   switch (role) {
     case "leader":
@@ -40,14 +49,14 @@ export default function RoleIcon({ role, className }: { role: Role; className?: 
           <line x1="12" y1="17.5" x2="12" y2="22.5" stroke="currentColor" strokeWidth="2" />
           <line x1="1.5" y1="12" x2="6.5" y2="12" stroke="currentColor" strokeWidth="2" />
           <line x1="17.5" y1="12" x2="22.5" y2="12" stroke="currentColor" strokeWidth="2" />
-          <circle cx="12" cy="12" r="1.6" />
+          <circle cx="12" cy="12" r="1.6" strokeWidth={0.5} />
         </svg>
       );
     case "wainwright":
       return (
         <svg {...common}>
           <circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" strokeWidth="2.2" />
-          <circle cx="12" cy="12" r="2" />
+          <circle cx="12" cy="12" r="2" strokeWidth={0.5} />
           {[0, 60, 120, 180, 240, 300].map((deg) => {
             const rad = (deg * Math.PI) / 180;
             const x2 = 12 + Math.cos(rad) * 8.3;
@@ -100,7 +109,7 @@ export default function RoleIcon({ role, className }: { role: Role; className?: 
       return (
         <svg {...common}>
           <circle cx="12" cy="12" r="8.5" />
-          <text x="12" y="16.5" textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--paper, #f2e6cd)">
+          <text x="12" y="16.5" textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--paper, #f2e6cd)" stroke="none">
             $
           </text>
         </svg>

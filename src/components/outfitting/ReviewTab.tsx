@@ -1,6 +1,7 @@
 import { useGameStore, selectTotalWeight, selectCapacity, outfittingCost } from "../../state/gameStore";
 import { WAGON_TYPES, DRAFT_ANIMALS } from "../../data/wagonsAndAnimals";
 import { getItemQty } from "../../systems/mutators";
+import { estimateProvisions } from "../../systems/provisions";
 
 export default function ReviewTab({ onDepart }: { onDepart: () => void }) {
   const state = useGameStore();
@@ -15,11 +16,20 @@ export default function ReviewTab({ onDepart }: { onDepart: () => void }) {
     (sum, id) => sum + getItemQty(state, id),
     0
   );
+  const provisions = estimateProvisions(state);
 
   const warnings: string[] = [];
   if (remainingCash < 0) warnings.push("You can't afford this wagon and team — adjust your choices.");
   if (weight > capacity) warnings.push("Your wagon is overloaded. This will slow you down badly.");
-  if (foodLbs < 100) warnings.push("You're bringing very little food for the trail ahead.");
+  if (foodLbs < provisions.starterFoodTotalLbs * 0.5) {
+    warnings.push(
+      `You're bringing well under half a practical starting stock (~${provisions.starterFoodTotalLbs} lbs would cover about ${provisions.starterDaysCovered} days for your party).`
+    );
+  } else if (foodLbs < provisions.starterFoodTotalLbs) {
+    warnings.push(
+      `You're a bit short of a practical starting stock (~${provisions.starterFoodTotalLbs} lbs) — fine if you plan to hunt, forage, or resupply at forts early on.`
+    );
+  }
   if (getItemQty(state, "bullets") === 0) warnings.push("No ammunition — you won't be able to hunt or defend the party.");
   if (getItemQty(state, "spare_wheel") === 0 && getItemQty(state, "spare_axle") === 0) {
     warnings.push("No spare parts — a break down could strand you.");

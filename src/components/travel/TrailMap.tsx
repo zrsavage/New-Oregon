@@ -86,7 +86,7 @@ function TerrainDecoration({ terrain, x, width }: { terrain: Landmark["terrain"]
 function LandmarkIcon({ kind }: { kind: "fort" | "fork" | "river" | "plain" }) {
   if (kind === "fort") {
     return (
-      <svg viewBox="0 0 16 16" className="landmark-icon">
+      <svg viewBox="0 0 16 16" className="landmark-icon" stroke="#2a1a0f" strokeWidth="0.6" strokeLinejoin="round">
         <polygon points="8,2 14,7.5 2,7.5" />
         <rect x="3.5" y="7.5" width="9" height="6.5" />
       </svg>
@@ -110,7 +110,7 @@ function LandmarkIcon({ kind }: { kind: "fort" | "fork" | "river" | "plain" }) {
     );
   }
   return (
-    <svg viewBox="0 0 16 16" className="landmark-icon">
+    <svg viewBox="0 0 16 16" className="landmark-icon" stroke="#2a1a0f" strokeWidth="0.6">
       <circle cx="8" cy="8" r="5" />
     </svg>
   );

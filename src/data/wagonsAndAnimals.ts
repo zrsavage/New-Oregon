@@ -28,7 +28,7 @@ export const WAGON_TYPES: Record<WagonTypeId, WagonTypeDef> = {
     cost: 150,
     baseCapacityLbs: 3200,
     baseSpeedModifier: 0.82,
-    durability: 130,
+    durability: 100,
     minDraftAnimals: 6,
   },
 };

@@ -156,7 +156,7 @@ export const useGameStore = create<Store>()(
           const cost = outfittingCost(d);
           if (d.cash < cost.total) return;
           d.cash -= cost.total;
-          d.wagonCondition = WAGON_TYPES[d.wagonType].durability;
+          d.wagonCondition = clamp(WAGON_TYPES[d.wagonType].durability, 0, 100);
           d.draftAnimalHealth = 100;
           d.phase = "travel";
           pushLog(d, `The journey begins! ${d.party.length} souls set out from Independence.`, "good");
