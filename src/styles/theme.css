@@ -283,6 +283,10 @@ h1, h2, h3, h4 {
   padding: 10px 14px;
   gap: 12px;
 }
+.party-row-info {
+  flex: 1;
+  min-width: 0;
+}
 .party-sub {
   font-size: 0.82em;
   color: var(--ink-soft);
@@ -403,69 +407,68 @@ h1, h2, h3, h4 {
 }
 .trail-track {
   position: relative;
-  height: 8px;
-  background: #d3bd8e;
-  border-radius: 4px;
-  margin: 30px 10px 12px;
+  height: 56px;
+  margin: 46px 14px 16px;
 }
-.trail-fill {
+.trail-terrain {
   position: absolute;
-  top: 0;
-  left: 0;
+  inset: 0;
+  width: 100%;
   height: 100%;
-  background: var(--leaf);
   border-radius: 4px;
+  overflow: visible;
 }
-.trail-wagon {
+.trail-wagon-marker {
   position: absolute;
-  top: -22px;
-  transform: translateX(-50%);
-  font-size: 1.3em;
+  top: 27%;
+  transform: translate(-50%, -100%);
   transition: left 0.8s ease-in-out;
   animation: wagon-bob 1.6s ease-in-out infinite;
+  filter: drop-shadow(0 2px 1px rgba(58, 42, 26, 0.35));
 }
 @keyframes wagon-bob {
-  0%, 100% { transform: translateX(-50%) translateY(0) rotate(0deg); }
-  50% { transform: translateX(-50%) translateY(-2px) rotate(-4deg); }
+  0%, 100% { transform: translate(-50%, -100%) translateY(0) rotate(0deg); }
+  50% { transform: translate(-50%, -100%) translateY(-2px) rotate(-2deg); }
 }
 .trail-marker {
   position: absolute;
-  top: -4px;
-  transform: translateX(-50%);
+  top: 50%;
+  transform: translate(-50%, -50%);
   display: flex;
-  flex-direction: column;
   align-items: center;
-  width: 16px;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  color: #8f7c52;
 }
-.trail-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #b3a074;
-  border: 2px solid var(--wood);
-  display: block;
+.landmark-icon {
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
+  filter: drop-shadow(0 1px 0.5px rgba(58, 42, 26, 0.4));
 }
-.trail-marker.visited .trail-dot {
-  background: var(--leaf);
+.trail-marker.visited {
+  color: var(--leaf);
 }
-.trail-marker.current .trail-dot {
-  background: var(--rust);
+.trail-marker.current {
+  color: var(--rust);
   animation: marker-pulse 1.8s ease-out infinite;
 }
 @keyframes marker-pulse {
-  0% { box-shadow: 0 0 0 0 rgba(139, 58, 47, 0.45); }
-  70% { box-shadow: 0 0 0 8px rgba(139, 58, 47, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(139, 58, 47, 0); }
+  0% { filter: drop-shadow(0 0 0 rgba(139, 58, 47, 0.5)); }
+  70% { filter: drop-shadow(0 0 4px rgba(139, 58, 47, 0)); }
+  100% { filter: drop-shadow(0 0 0 rgba(139, 58, 47, 0)); }
 }
-.trail-marker.fort .trail-dot {
-  border-color: var(--gold);
+.trail-marker.fort:not(.visited):not(.current) {
+  color: var(--gold);
 }
 .trail-progress-text {
   text-align: center;
   margin-top: 8px;
   font-weight: 600;
 }
-.trail-next {
+.trail-next,
+.trail-terrain-tag {
   font-weight: 400;
   color: var(--ink-soft);
 }
@@ -494,12 +497,19 @@ h1, h2, h3, h4 {
   gap: 10px;
 }
 .party-compact-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
   border-bottom: 1px dotted #d0bd94;
   padding-bottom: 8px;
 }
 .party-compact-row.status-dead {
   opacity: 0.5;
   text-decoration: line-through;
+}
+.party-compact-body {
+  flex: 1;
+  min-width: 0;
 }
 .party-compact-name {
   font-weight: 600;
@@ -516,6 +526,60 @@ h1, h2, h3, h4 {
   font-size: 0.78em;
   color: var(--ink-soft);
   margin-top: 2px;
+}
+
+/* ---------- Party Avatar ---------- */
+.party-avatar {
+  position: relative;
+  flex-shrink: 0;
+}
+.avatar-ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(0deg);
+}
+.avatar-ring-track {
+  fill: none;
+  stroke: rgba(58, 42, 26, 0.15);
+  stroke-width: 3;
+}
+.avatar-ring-fill {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.4s ease;
+}
+.avatar-circle {
+  position: absolute;
+  inset: 15%;
+  border-radius: 50%;
+  background: var(--avatar-color, var(--wood));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.25);
+}
+.avatar-icon {
+  width: 58%;
+  height: 58%;
+  color: #fdf6e6;
+}
+.avatar-dead {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--danger);
+  font-weight: 700;
+  font-size: 1.1em;
+  text-shadow: 0 1px 0 #fff;
+}
+.party-avatar.dead .avatar-circle {
+  filter: grayscale(1);
+  opacity: 0.6;
 }
 
 .bar-track {
@@ -544,6 +608,34 @@ h1, h2, h3, h4 {
   font-size: 0.8em;
   color: var(--ink-soft);
   margin: 0 0 10px;
+}
+
+/* ---------- Wagon Rig ---------- */
+.wagon-rig {
+  display: block;
+  margin: 0 0 10px;
+  overflow: visible;
+}
+.wagon-rig-ground {
+  stroke: #b3a074;
+  stroke-width: 1.5;
+}
+.wagon-rig-harness {
+  stroke: #4a2f18;
+  stroke-width: 1.2;
+}
+.wagon-rig-extra {
+  font-size: 6px;
+  fill: var(--ink-soft);
+}
+.wagon-preview {
+  display: flex;
+  justify-content: center;
+  background: var(--paper-dark);
+  border: 2px solid var(--wood);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 20px;
 }
 
 .key-items {

@@ -1,6 +1,7 @@
 import { useGameStore } from "../../state/gameStore";
 import { ROLES } from "../../data/roles";
 import { TRAITS } from "../../data/traits";
+import PartyAvatar from "../shared/PartyAvatar";
 
 export default function PartyTab() {
   const party = useGameStore((s) => s.party);
@@ -15,7 +16,8 @@ export default function PartyTab() {
       <div className="party-list">
         {party.map((c) => (
           <div key={c.id} className="party-row">
-            <div>
+            <PartyAvatar character={c} size={44} />
+            <div className="party-row-info">
               <strong>{c.name}</strong> — {ROLES[c.role].name}
               {c.isLeader && <span className="tag">Leader</span>}
               {c.isFamily && !c.isLeader && <span className="tag">Family</span>}
@@ -45,7 +47,8 @@ export default function PartyTab() {
       <div className="party-list">
         {hirePool.map((c) => (
           <div key={c.id} className="party-row">
-            <div>
+            <PartyAvatar character={c} size={44} />
+            <div className="party-row-info">
               <strong>{c.name}</strong> — {ROLES[c.role].name}
               <div className="party-sub">
                 Age {c.age} · Skill {c.skillLevel} · Wage ${c.wage}/wk

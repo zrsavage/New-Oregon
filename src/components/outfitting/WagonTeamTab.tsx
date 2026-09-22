@@ -1,5 +1,6 @@
 import { useGameStore, ALL_WAGON_TYPES, ALL_DRAFT_ANIMALS } from "../../state/gameStore";
 import { WAGON_TYPES } from "../../data/wagonsAndAnimals";
+import WagonRig from "../shared/WagonRig";
 
 export default function WagonTeamTab() {
   const wagonType = useGameStore((s) => s.wagonType);
@@ -13,6 +14,16 @@ export default function WagonTeamTab() {
 
   return (
     <div className="outfit-tab">
+      <div className="wagon-preview">
+        <WagonRig
+          wagonType={wagonType}
+          draftAnimalType={draftAnimalType}
+          draftAnimalCount={draftAnimalCount}
+          wagonCondition={100}
+          draftAnimalHealth={100}
+          width={320}
+        />
+      </div>
       <h3>Choose Your Wagon</h3>
       <div className="card-grid">
         {ALL_WAGON_TYPES.map((w) => (

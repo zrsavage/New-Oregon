@@ -1,5 +1,6 @@
 import { useGameStore, selectTotalWeight, selectCapacity } from "../../state/gameStore";
 import { WAGON_TYPES, DRAFT_ANIMALS } from "../../data/wagonsAndAnimals";
+import WagonRig from "../shared/WagonRig";
 
 export default function WagonPanel() {
   const state = useGameStore();
@@ -9,6 +10,14 @@ export default function WagonPanel() {
   return (
     <div className="panel wagon-panel">
       <h3>Wagon &amp; Team</h3>
+      <WagonRig
+        wagonType={state.wagonType}
+        draftAnimalType={state.draftAnimalType}
+        draftAnimalCount={state.draftAnimalCount}
+        wagonCondition={state.wagonCondition}
+        draftAnimalHealth={state.draftAnimalHealth}
+        width={260}
+      />
       <p>{WAGON_TYPES[state.wagonType].name}</p>
       <div className="bar-track" title={`Condition ${Math.round(state.wagonCondition)}`}>
         <div className="bar-fill wagon" style={{ width: `${state.wagonCondition}%` }} />
