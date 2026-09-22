@@ -1,4 +1,5 @@
 import { useGameStore } from "../../state/gameStore";
+import { useGravesStore } from "../../state/gravesStore";
 import { TRAIL, TRAIL_BY_ID, TOTAL_TRAIL_MILES } from "../../data/trail";
 import { TERRAIN_COLORS, TERRAIN_LABELS } from "../../systems/visuals";
 import WagonRig from "../shared/WagonRig";
@@ -123,6 +124,25 @@ function iconKind(lm: Landmark): "fort" | "fork" | "river" | "plain" {
   return "plain";
 }
 
+function GraveIcon() {
+  return (
+    <svg viewBox="0 0 16 16" className="grave-icon">
+      <path
+        d="M4,15 L4,6.5 Q4,2 8,2 Q12,2 12,6.5 L12,15 Z"
+        fill="#c9bfa8"
+        stroke="#4a2f18"
+        strokeWidth="0.8"
+      />
+      <line x1="8" y1="5" x2="8" y2="10" stroke="#4a2f18" strokeWidth="0.9" strokeLinecap="round" />
+      <line x1="5.7" y1="7.3" x2="10.3" y2="7.3" stroke="#4a2f18" strokeWidth="0.9" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function formatGraveDate(date: { year: number; month: number; day: number }): string {
+  return `${date.month}/${date.day}/${date.year}`;
+}
+
 export default function TrailMap() {
   const mile = useGameStore((s) => s.mile);
   const route = useGameStore((s) => s.route);
@@ -134,11 +154,25 @@ export default function TrailMap() {
   const wagonCondition = useGameStore((s) => s.wagonCondition);
   const draftAnimalHealth = useGameStore((s) => s.draftAnimalHealth);
 
+  const graves = useGravesStore((s) => s.graves);
+
   const progressPct = Math.min(100, (mile / TOTAL_TRAIL_MILES) * 100);
   const current = TRAIL_BY_ID[currentLandmarkId];
   const next = nextLandmarkId ? TRAIL_BY_ID[nextLandmarkId] : null;
   const distanceToNext = next ? Math.max(0, Math.round(next.mileMarker - mile)) : null;
   const traveledX = mileToX(mile);
+
+  // Graves that land at (nearly) the same mile get nudged apart so their
+  // markers don't sit fully on top of one another.
+  const gravePositions = (() => {
+    const sorted = [...graves].sort((a, b) => a.mile - b.mile);
+    const seenAtMile = new Map<number, number>();
+    return sorted.map((g) => {
+      const count = seenAtMile.get(g.mile) ?? 0;
+      seenAtMile.set(g.mile, count + 1);
+      return { grave: g, offsetPx: count * 7 };
+    });
+  })();
 
   return (
     <div className="trail-map">
@@ -168,6 +202,20 @@ export default function TrailMap() {
               title={`${lm.name} (${TERRAIN_LABELS[lm.terrain]})`}
             >
               <LandmarkIcon kind={iconKind(lm)} />
+            </div>
+          );
+        })}
+
+        {gravePositions.map(({ grave, offsetPx }) => {
+          const pct = (grave.mile / TOTAL_TRAIL_MILES) * 100;
+          return (
+            <div
+              key={grave.id}
+              className="grave-marker"
+              style={{ left: `${pct}%`, transform: `translate(calc(-50% + ${offsetPx}px), -50%)` }}
+              title={`Here lies ${grave.name} — ${grave.cause}. ${formatGraveDate(grave.date)}`}
+            >
+              <GraveIcon />
             </div>
           );
         })}

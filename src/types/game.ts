@@ -72,6 +72,7 @@ export interface Character {
   ailmentDaysRemaining: number;
   morale: number; // 0-100, personal morale
   fatigue: number; // 0-100, rises with strenuous pace, drops with rest
+  deathCause?: string; // set once, when status first becomes "dead" — feeds the trailside grave marker
 }
 
 export type WagonTypeId = "light" | "standard" | "heavy";
@@ -298,6 +299,9 @@ export interface GameState {
   pendingCook: boolean;
   pendingDoctor: boolean;
   cookedToday: boolean;
+  // Character ids whose deaths have already been written to the cross-run
+  // grave log this run, so a single death isn't recorded more than once.
+  recordedGraveIds: string[];
 
   log: LogEntry[];
   ending: EndingReason | null;

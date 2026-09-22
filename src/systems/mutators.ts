@@ -48,9 +48,30 @@ export function livingParty(state: GameState): Character[] {
   return state.party.filter((c) => c.status !== "dead");
 }
 
-export function adjustHealth(person: Character, delta: number) {
+const AILMENT_LABELS: Record<Ailment, string> = {
+  dysentery: "dysentery",
+  cholera: "cholera",
+  typhoid: "typhoid fever",
+  measles: "measles",
+  broken_limb: "a broken limb",
+  snakebite: "a snakebite",
+  exhaustion: "exhaustion",
+  food_poisoning: "food poisoning",
+  hypothermia: "hypothermia",
+};
+
+/**
+ * `cause` is only ever used the moment health first crosses into death — it
+ * feeds the epitaph on the trailside grave marker future runs will see at
+ * this spot. Falls back to the current ailment, then a generic epitaph, so
+ * every death site still reads as something rather than nothing.
+ */
+export function adjustHealth(person: Character, delta: number, cause?: string) {
   person.health = clamp(person.health + delta, 0, 100);
   if (person.health <= 0) {
+    if (person.status !== "dead") {
+      person.deathCause = cause ?? (person.ailment ? AILMENT_LABELS[person.ailment] : undefined) ?? "the hardships of the trail";
+    }
     person.status = "dead";
     person.ailment = null;
     person.ailmentDaysRemaining = 0;

@@ -21,6 +21,7 @@ import { maybeTriggerEvent, resolveEventChoice } from "../systems/eventEngine";
 import { arriveAtLandmark, checkEnding } from "../systems/progress";
 import { attemptCrossing } from "../systems/river";
 import { applyAchievements } from "../systems/achievements";
+import { recordGraves } from "../systems/graves";
 import { huntingBlockedReason, resolveHunt } from "../systems/hunting";
 import { cookingBlockedReason, resolveCook } from "../systems/cooking";
 import { doctoringBlockedReason, resolveDoctor } from "../systems/doctoring";
@@ -103,6 +104,7 @@ function mutate(
   const next = produce<GameState>(current, (draft) => {
     recipe(draft);
     applyAchievements(draft);
+    recordGraves(draft);
   });
   set(next);
   return next;

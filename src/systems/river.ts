@@ -109,7 +109,7 @@ export function attemptCrossing(
       const alive = livingParty(draft);
       if (alive.length > 0) {
         const victim = alive[Math.floor(rng() * alive.length)];
-        adjustHealth(victim, -randInt(rng, 15, 35));
+        adjustHealth(victim, -randInt(rng, 15, 35), `swept away crossing ${crossing.name}`);
         pushLog(draft, `${victim.name} is swept in the current at ${crossing.name} but pulled to safety.`, "critical");
       }
     }

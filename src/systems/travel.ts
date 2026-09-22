@@ -65,6 +65,16 @@ const WEATHER_HEALTH_DELTA: Record<WeatherCondition, number> = {
   blizzard: -6,
 };
 
+const WEATHER_DEATH_CAUSE: Record<WeatherCondition, string> = {
+  clear: "the trail",
+  rain: "exposure to the cold rain",
+  storm: "a violent storm",
+  heat_wave: "heat stroke",
+  cold_snap: "the bitter cold",
+  snow: "exposure to the snow",
+  blizzard: "a blizzard",
+};
+
 const FOOD_PRIORITY = ["fresh_meat", "bacon", "cornmeal", "beans", "flour", "dried_fruit", "sugar"];
 
 export function currentTerrain(state: GameState): TerrainType {
@@ -166,7 +176,7 @@ function consumeFood(draft: GameState) {
 
   if (needed > 0.01) {
     // Starvation: not enough food to go around.
-    for (const person of alive) adjustHealth(person, -8);
+    for (const person of alive) adjustHealth(person, -8, "starvation");
     pushLog(draft, "Food runs short. The party goes hungry.", "bad");
   } else {
     for (const person of alive) adjustHealth(person, rationsInfo.healthDelta);
@@ -227,7 +237,7 @@ function updateFatigueAndAnimals(draft: GameState, resting: boolean) {
   const paceInfo = PACE_TABLE[draft.pace];
   for (const person of livingParty(draft)) {
     person.fatigue = clamp(person.fatigue + paceInfo.fatigueCost - 4, 0, 100);
-    if (person.fatigue > 80) adjustHealth(person, -2);
+    if (person.fatigue > 80) adjustHealth(person, -2, "sheer exhaustion");
   }
 
   const grazingQuality = terrain === "plains" || terrain === "hills" ? 1 : terrain === "desert" ? -2 : 0.3;
@@ -266,7 +276,7 @@ export function tickDay(draft: GameState, rng: () => number, opts: { resting?: b
 
   const weatherDelta = WEATHER_HEALTH_DELTA[draft.weather];
   if (weatherDelta !== 0) {
-    for (const person of livingParty(draft)) adjustHealth(person, weatherDelta);
+    for (const person of livingParty(draft)) adjustHealth(person, weatherDelta, WEATHER_DEATH_CAUSE[draft.weather]);
   }
 
   if (opts.resting) {
