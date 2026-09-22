@@ -39,10 +39,23 @@ export function assessCrossingRisk(state: GameState, crossing: RiverCrossing, me
   return null;
 }
 
+/**
+ * Ford and caulk-float are hands-on efforts: a well-timed push at the wagon
+ * wheels or the float ropes measurably improves the odds. Quality (0-100,
+ * from the timing mini-game) scales the danger chance from the assessment
+ * without ever overriding the underlying skill-based roll.
+ */
+function qualityAdjustedChance(assessment: RiskAssessment, quality: number): number {
+  const q = Math.max(0, Math.min(100, quality));
+  const multiplier = 1.3 - (q / 100) * 0.8; // 1.3x danger at quality 0, 0.5x at quality 100
+  return Math.max(2, Math.min(98, Math.round(assessment.chance * multiplier)));
+}
+
 export function attemptCrossing(
   draft: GameState,
   crossing: RiverCrossing,
   method: RiverCrossingMethod,
+  quality: number,
   rng: () => number
 ): CrossingResult {
   if (method === "ferry") {
@@ -79,7 +92,8 @@ export function attemptCrossing(
 
   // ford or caulk_float
   const assessment = assessCrossingRisk(draft, crossing, method)!;
-  if (rollAgainst(assessment, rng)) {
+  const adjusted = { ...assessment, chance: qualityAdjustedChance(assessment, quality) };
+  if (rollAgainst(adjusted, rng)) {
     // Failure: lose cargo, damage wagon, possible injury.
     const weightLossFrac = 0.05 + rng() * 0.15;
     for (const stack of draft.inventory) {

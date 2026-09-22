@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { useGameStore } from "../../state/gameStore";
-import { HUNT_TARGETS } from "../../systems/hunting";
+import { HUNT_TARGETS, HUNT_TARGETS_BY_ID } from "../../systems/hunting";
 import { getItemQty } from "../../systems/mutators";
 import RiskDisplay from "../shared/RiskDisplay";
+import TimingBar from "../shared/TimingBar";
 
 export default function HuntModal() {
   const state = useGameStore();
@@ -10,6 +12,7 @@ export default function HuntModal() {
   const resolveHuntChoice = useGameStore((s) => s.resolveHuntChoice);
   const lastHuntNarrative = useGameStore((s) => s.lastHuntNarrative);
   const clearNarratives = useGameStore((s) => s.clearNarratives);
+  const [selectedTargetId, setSelectedTargetId] = useState<string | null>(null);
 
   if (!pendingHunt && !lastHuntNarrative) return null;
 
@@ -19,7 +22,13 @@ export default function HuntModal() {
         <div className="modal hunt-modal">
           <h2>The Hunt</h2>
           <p>{lastHuntNarrative}</p>
-          <button className="btn primary" onClick={clearNarratives}>
+          <button
+            className="btn primary"
+            onClick={() => {
+              setSelectedTargetId(null);
+              clearNarratives();
+            }}
+          >
             Continue
           </button>
         </div>
@@ -28,6 +37,23 @@ export default function HuntModal() {
   }
 
   const bullets = getItemQty(state, "bullets");
+
+  if (selectedTargetId) {
+    const target = HUNT_TARGETS_BY_ID[selectedTargetId];
+    return (
+      <div className="modal-backdrop">
+        <div className="modal hunt-modal">
+          <h2>{target.label}</h2>
+          <p>Line up your shot — click Stop as the marker crosses the sweet spot for a cleaner shot.</p>
+          <TimingBar
+            label="Take aim..."
+            difficulty={target.id === "big_game" ? "hard" : target.id === "deer" ? "medium" : "easy"}
+            onResolve={(quality) => resolveHuntChoice(target.id, quality)}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="modal-backdrop">
@@ -46,7 +72,7 @@ export default function HuntModal() {
                 key={target.id}
                 className="btn choice-btn"
                 disabled={disabled}
-                onClick={() => resolveHuntChoice(target.id)}
+                onClick={() => setSelectedTargetId(target.id)}
               >
                 <span>
                   {target.label} ({target.bulletCost} bullet{target.bulletCost > 1 ? "s" : ""})

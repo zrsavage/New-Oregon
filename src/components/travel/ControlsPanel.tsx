@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useGameStore } from "../../state/gameStore";
 import { TRAIL_BY_ID } from "../../data/trail";
 import { huntingBlockedReason } from "../../systems/hunting";
+import { cookingBlockedReason } from "../../systems/cooking";
+import { doctoringBlockedReason } from "../../systems/doctoring";
 import type { Pace, Rations } from "../../types/game";
 
 const PACE_OPTIONS: { id: Pace; label: string; hint: string }[] = [
@@ -26,6 +28,8 @@ export default function ControlsPanel() {
   const restDay = useGameStore((s) => s.restDay);
   const openTrade = useGameStore((s) => s.openTrade);
   const openHunt = useGameStore((s) => s.openHunt);
+  const openCook = useGameStore((s) => s.openCook);
+  const openDoctor = useGameStore((s) => s.openDoctor);
   const repairWagon = useGameStore((s) => s.repairWagon);
   const settleDown = useGameStore((s) => s.settleDown);
   const currentLandmarkId = useGameStore((s) => s.currentLandmarkId);
@@ -35,13 +39,24 @@ export default function ControlsPanel() {
   const [confirmingSettle, setConfirmingSettle] = useState(false);
 
   const blocked = useGameStore(
-    (s) => !!(s.pendingEvent || s.pendingFork || s.pendingRiverCrossing || s.pendingTrade || s.pendingHunt)
+    (s) =>
+      !!(
+        s.pendingEvent ||
+        s.pendingFork ||
+        s.pendingRiverCrossing ||
+        s.pendingTrade ||
+        s.pendingHunt ||
+        s.pendingCook ||
+        s.pendingDoctor
+      )
   );
 
   const landmark = TRAIL_BY_ID[currentLandmarkId];
   const repairCost = Math.round((100 - wagonCondition) * 0.6 * 100) / 100;
   const canSettle = !isPractice && landmark?.hasFort && currentLandmarkId !== "independence";
   const huntBlockReason = huntingBlockedReason(state);
+  const cookBlockReason = cookingBlockedReason(state);
+  const doctorBlockReason = doctoringBlockedReason(state);
 
   return (
     <div className="panel controls-panel">
@@ -98,6 +113,22 @@ export default function ControlsPanel() {
           onClick={openHunt}
         >
           Go Hunting
+        </button>
+        <button
+          className="btn"
+          disabled={blocked || !!cookBlockReason}
+          title={cookBlockReason ?? "Cook a special meal to lift morale — no travel time lost"}
+          onClick={openCook}
+        >
+          Cook a Meal
+        </button>
+        <button
+          className="btn"
+          disabled={blocked || !!doctorBlockReason}
+          title={doctorBlockReason ?? "Treat a sick or injured party member"}
+          onClick={openDoctor}
+        >
+          Treat the Sick
         </button>
       </div>
 

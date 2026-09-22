@@ -39,6 +39,9 @@ export function createNewGame(leaderName: string, seed: number, isPractice = fal
     pendingFork: false,
     pendingTrade: false,
     pendingHunt: false,
+    pendingCook: false,
+    pendingDoctor: false,
+    cookedToday: false,
 
     log: [],
     ending: null,

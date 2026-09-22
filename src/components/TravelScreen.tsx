@@ -10,6 +10,8 @@ import ForkModal from "./modals/ForkModal";
 import RiverCrossingModal from "./modals/RiverCrossingModal";
 import TradeModal from "./modals/TradeModal";
 import HuntModal from "./modals/HuntModal";
+import CookModal from "./modals/CookModal";
+import DoctorModal from "./modals/DoctorModal";
 import WeatherFX from "./travel/WeatherFX";
 
 export default function TravelScreen() {
@@ -44,6 +46,8 @@ export default function TravelScreen() {
       <ForkModal />
       <TradeModal />
       <HuntModal />
+      <CookModal />
+      <DoctorModal />
     </div>
   );
 }

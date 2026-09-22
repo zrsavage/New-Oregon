@@ -295,6 +295,9 @@ export interface GameState {
   pendingFork: boolean;
   pendingTrade: boolean;
   pendingHunt: boolean;
+  pendingCook: boolean;
+  pendingDoctor: boolean;
+  cookedToday: boolean;
 
   log: LogEntry[];
   ending: EndingReason | null;

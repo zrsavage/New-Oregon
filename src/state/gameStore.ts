@@ -22,6 +22,8 @@ import { arriveAtLandmark, checkEnding } from "../systems/progress";
 import { attemptCrossing } from "../systems/river";
 import { applyAchievements } from "../systems/achievements";
 import { huntingBlockedReason, resolveHunt } from "../systems/hunting";
+import { cookingBlockedReason, resolveCook } from "../systems/cooking";
+import { doctoringBlockedReason, resolveDoctor } from "../systems/doctoring";
 import { clamp, livingParty, pushLog, totalWeight } from "../systems/mutators";
 
 let rng = mulberry32(Date.now() % 2147483647);
@@ -30,6 +32,8 @@ interface StoreExtra {
   lastEventNarrative: string | null;
   lastCrossingNarrative: string | null;
   lastHuntNarrative: string | null;
+  lastCookNarrative: string | null;
+  lastDoctorNarrative: string | null;
 }
 
 interface StoreActions {
@@ -54,7 +58,7 @@ interface StoreActions {
 
   resolveEvent: (choiceId: string) => void;
   resolveFork: (optionId: string) => void;
-  resolveRiverCrossing: (method: RiverCrossingMethod) => void;
+  resolveRiverCrossing: (method: RiverCrossingMethod, quality?: number) => void;
 
   openTrade: () => void;
   closeTrade: () => void;
@@ -65,7 +69,15 @@ interface StoreActions {
 
   openHunt: () => void;
   closeHunt: () => void;
-  resolveHuntChoice: (targetId: string) => void;
+  resolveHuntChoice: (targetId: string, quality: number) => void;
+
+  openCook: () => void;
+  closeCook: () => void;
+  resolveCookChoice: (quality: number) => void;
+
+  openDoctor: () => void;
+  closeDoctor: () => void;
+  resolveDoctorChoice: (personId: string, quality: number) => void;
 
   clearNarratives: () => void;
 }
@@ -104,6 +116,8 @@ export const useGameStore = create<Store>()(
       lastEventNarrative: null,
       lastCrossingNarrative: null,
       lastHuntNarrative: null,
+      lastCookNarrative: null,
+      lastDoctorNarrative: null,
 
       startNewGame: (leaderName) => {
         set({ ...fresh(leaderName), phase: "outfitting" });
@@ -181,7 +195,9 @@ export const useGameStore = create<Store>()(
             s.pendingFork ||
             s.pendingRiverCrossing ||
             s.pendingTrade ||
-            s.pendingHunt
+            s.pendingHunt ||
+            s.pendingCook ||
+            s.pendingDoctor
           ) {
             return;
           }
@@ -236,7 +252,9 @@ export const useGameStore = create<Store>()(
             s.pendingFork ||
             s.pendingRiverCrossing ||
             s.pendingTrade ||
-            s.pendingHunt
+            s.pendingHunt ||
+            s.pendingCook ||
+            s.pendingDoctor
           ) {
             return;
           }
@@ -273,12 +291,12 @@ export const useGameStore = create<Store>()(
           pushLog(d, `You choose: ${option.label}.`, "info");
         }),
 
-      resolveRiverCrossing: (method) => {
+      resolveRiverCrossing: (method, quality = 50) => {
         let narrative = "";
         mutate(set, get, (d) => {
           const landmark = TRAIL_BY_ID[d.currentLandmarkId];
           if (!landmark?.riverCrossing) return;
-          const result = attemptCrossing(d, landmark.riverCrossing, method, rng);
+          const result = attemptCrossing(d, landmark.riverCrossing, method, quality, rng);
           narrative = result.narrative;
           if (method === "wait") {
             tickDay(d, rng, { resting: true });
@@ -332,10 +350,10 @@ export const useGameStore = create<Store>()(
         }),
       closeHunt: () => mutate(set, get, (d) => { d.pendingHunt = false; }),
 
-      resolveHuntChoice: (targetId) => {
+      resolveHuntChoice: (targetId, quality) => {
         let narrative = "";
         mutate(set, get, (d) => {
-          narrative = resolveHunt(d, targetId, rng);
+          narrative = resolveHunt(d, targetId, quality, rng);
           d.pendingHunt = false;
           // A day spent hunting is a day the wagon doesn't move — the team rests/grazes instead.
           tickDay(d, rng, { resting: true });
@@ -344,7 +362,47 @@ export const useGameStore = create<Store>()(
         set({ lastHuntNarrative: narrative });
       },
 
-      clearNarratives: () => set({ lastEventNarrative: null, lastCrossingNarrative: null, lastHuntNarrative: null }),
+      openCook: () =>
+        mutate(set, get, (d) => {
+          if (cookingBlockedReason(d)) return;
+          d.pendingCook = true;
+        }),
+      closeCook: () => mutate(set, get, (d) => { d.pendingCook = false; }),
+
+      resolveCookChoice: (quality) => {
+        let narrative = "";
+        mutate(set, get, (d) => {
+          narrative = resolveCook(d, quality);
+          d.pendingCook = false;
+        });
+        set({ lastCookNarrative: narrative });
+      },
+
+      openDoctor: () =>
+        mutate(set, get, (d) => {
+          if (doctoringBlockedReason(d)) return;
+          d.pendingDoctor = true;
+        }),
+      closeDoctor: () => mutate(set, get, (d) => { d.pendingDoctor = false; }),
+
+      resolveDoctorChoice: (personId, quality) => {
+        let narrative = "";
+        mutate(set, get, (d) => {
+          narrative = resolveDoctor(d, personId, quality);
+          d.pendingDoctor = false;
+          checkEnding(d);
+        });
+        set({ lastDoctorNarrative: narrative });
+      },
+
+      clearNarratives: () =>
+        set({
+          lastEventNarrative: null,
+          lastCrossingNarrative: null,
+          lastHuntNarrative: null,
+          lastCookNarrative: null,
+          lastDoctorNarrative: null,
+        }),
     }),
     {
       name: "new-oregon-save",

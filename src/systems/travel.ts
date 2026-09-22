@@ -252,4 +252,5 @@ export function tickDay(draft: GameState, rng: () => number, opts: { resting?: b
 
   draft.date = advanceCalendar(draft.date, 1);
   draft.daysTraveled += 1;
+  draft.cookedToday = false;
 }

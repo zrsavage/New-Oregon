@@ -80,7 +80,7 @@ export const HUNT_TARGETS_BY_ID: Record<string, HuntTarget> = Object.fromEntries
  * genuinely left in the wagon — a limit the player can see coming and plan
  * around, tied to the same cargo system as everything else they carry.
  */
-export function resolveHunt(draft: GameState, targetId: string, rng: () => number): string {
+export function resolveHunt(draft: GameState, targetId: string, quality: number, rng: () => number): string {
   const target = HUNT_TARGETS_BY_ID[targetId];
   if (!target) return "";
   if (!removeItem(draft, "bullets", target.bulletCost)) {
@@ -93,7 +93,8 @@ export function resolveHunt(draft: GameState, targetId: string, rng: () => numbe
     return "No luck this time. The game gets away, and you head back to the wagon empty-handed.";
   }
 
-  const rawYield = randInt(rng, target.yieldMin, target.yieldMax);
+  const shotMultiplier = 0.6 + (Math.max(0, Math.min(100, quality)) / 100) * 0.7;
+  const rawYield = Math.round(randInt(rng, target.yieldMin, target.yieldMax) * shotMultiplier);
   const room = Math.max(0, Math.round(wagonCapacity(draft) - totalWeight(draft)));
   const takenYield = Math.min(rawYield, room);
 

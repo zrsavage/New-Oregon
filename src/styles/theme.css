@@ -899,6 +899,53 @@ h1, h2, h3, h4 {
   margin-bottom: 4px;
 }
 
+/* ---------- Timing mini-game ---------- */
+.timing-bar {
+  margin: 14px 0;
+}
+.timing-bar-label {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.timing-bar-track {
+  position: relative;
+  height: 28px;
+  background: #d9c9a3;
+  border: 2px solid var(--wood);
+  border-radius: 6px;
+  cursor: pointer;
+  overflow: visible;
+}
+.timing-bar-zone {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  background: rgba(62, 107, 47, 0.35);
+  border-left: 2px solid var(--good);
+  border-right: 2px solid var(--good);
+  border-radius: 3px;
+}
+.timing-bar-marker {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 4px;
+  background: var(--rust);
+  border-radius: 2px;
+  transform: translateX(-50%);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5);
+}
+.timing-bar-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  align-items: center;
+}
+.timing-quality {
+  margin-top: 8px;
+  font-weight: 600;
+}
+
 /* ---------- Weather FX ---------- */
 .weather-fx {
   position: fixed;
