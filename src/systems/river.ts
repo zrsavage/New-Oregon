@@ -10,9 +10,10 @@ export interface CrossingResult {
   clean: boolean; // true if no wagon condition or cargo was lost
 }
 
-function severity(crossing: RiverCrossing): number {
+export function crossingSeverity(crossing: RiverCrossing): number {
   return crossing.depthFt * 1.2 + crossing.currentSpeed;
 }
+const severity = crossingSeverity;
 
 /**
  * Odds of a bad outcome for a given crossing method, factoring in the party's

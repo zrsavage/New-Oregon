@@ -649,6 +649,9 @@ h1, h2, h3, h4 {
 .bar-fill.morale {
   background: var(--gold);
 }
+.bar-fill.fatigue {
+  background: var(--rust);
+}
 .bar-fill.wagon {
   background: var(--wood);
 }
@@ -1010,6 +1013,36 @@ h1, h2, h3, h4 {
   font-size: 0.85em;
   color: var(--ink-soft);
   min-height: 1.2em;
+}
+
+/* ---------- River Crossing mini-game ---------- */
+.river-modal-wide {
+  max-width: 700px;
+}
+.river-crossing-game {
+  margin-top: 10px;
+}
+.river-crossing-scene {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 640 / 260;
+  border: 2px solid var(--wood);
+  border-radius: 6px;
+  cursor: crosshair;
+  overflow: visible;
+}
+.river-wagon-group {
+  filter: url(#sketchy-ink);
+}
+.river-obstacle {
+  filter: url(#sketchy-ink);
+}
+.river-obstacle.hit ellipse {
+  opacity: 0.85;
+}
+.river-obstacle.passed ellipse {
+  opacity: 0.55;
 }
 
 /* ---------- Weather FX ---------- */

@@ -17,6 +17,7 @@ export default function PartyPanel() {
   return (
     <div className="panel party-panel">
       <h3>Party</h3>
+      <p className="small-label">Health · Morale · Fatigue (lower is better)</p>
       <div className="party-compact-list">
         {party.map((c) => (
           <div key={c.id} className={`party-compact-row status-${c.status}`}>
@@ -34,6 +35,9 @@ export default function PartyPanel() {
               </div>
               <div className="bar-track" title={`Morale ${Math.round(c.morale)}`}>
                 <div className="bar-fill morale" style={{ width: `${c.morale}%` }} />
+              </div>
+              <div className="bar-track" title={`Fatigue ${Math.round(c.fatigue)}`}>
+                <div className="bar-fill fatigue" style={{ width: `${c.fatigue}%` }} />
               </div>
               <div className="party-compact-status">
                 {STATUS_LABEL[c.status]}

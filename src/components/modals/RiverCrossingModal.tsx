@@ -3,7 +3,7 @@ import { useGameStore } from "../../state/gameStore";
 import { TRAIL_BY_ID } from "../../data/trail";
 import { assessCrossingRisk } from "../../systems/river";
 import RiskDisplay from "../shared/RiskDisplay";
-import TimingBar from "../shared/TimingBar";
+import RiverCrossingGame, { type SteerableCrossingMethod } from "../shared/RiverCrossingGame";
 import type { RiverCrossingMethod } from "../../types/game";
 
 const TIMED_METHODS = new Set<RiverCrossingMethod>(["ford", "caulk_float"]);
@@ -46,18 +46,13 @@ export default function RiverCrossingModal() {
 
   if (selectedMethod) {
     const label = selectedMethod === "ford" ? "Ford the river" : "Caulk the wagon and float it";
-    const hint =
-      selectedMethod === "ford"
-        ? "Time the wheels off the rocks as you drive through — click Stop as the marker crosses the sweet spot."
-        : "Time the push as you float the wagon across — click Stop as the marker crosses the sweet spot.";
     return (
       <div className="modal-backdrop">
-        <div className="modal river-modal">
+        <div className="modal river-modal river-modal-wide">
           <h2>{label}</h2>
-          <p>{hint}</p>
-          <TimingBar
-            label="Steady the wagon..."
-            difficulty={crossing.depthFt * 1.2 + crossing.currentSpeed > 40 ? "hard" : "medium"}
+          <RiverCrossingGame
+            method={selectedMethod as SteerableCrossingMethod}
+            crossing={crossing}
             onResolve={(quality) => resolveRiverCrossing(selectedMethod, quality)}
           />
         </div>

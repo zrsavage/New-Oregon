@@ -3,6 +3,7 @@ import { WAGON_TYPES, DRAFT_ANIMALS } from "../data/wagonsAndAnimals";
 import { TRAIL_BY_ID } from "../data/trail";
 import {
   adjustHealth,
+  adjustMorale,
   clamp,
   cureAilment,
   getItemQty,
@@ -237,6 +238,24 @@ function updateFatigueAndAnimals(draft: GameState, resting: boolean) {
   draft.wagonCondition = clamp(draft.wagonCondition - wagonWear, 0, 100);
 }
 
+/**
+ * The concrete payoff for choosing to rest instead of push on: beyond the
+ * fatigue recovery already handled in updateFatigueAndAnimals, a rest day
+ * gives the party a little healing, a morale lift, time for small running
+ * repairs on the wagon, and a head start on shaking off illness — all of it
+ * visible on the same bars the player already watches.
+ */
+function applyRestBenefits(draft: GameState) {
+  for (const person of livingParty(draft)) {
+    adjustHealth(person, 3);
+    if (person.ailment) {
+      person.ailmentDaysRemaining = Math.max(0, person.ailmentDaysRemaining - 1);
+    }
+  }
+  adjustMorale(draft, 5);
+  draft.wagonCondition = clamp(draft.wagonCondition + 1.5, 0, 100);
+}
+
 /** Advances one full day: consumption, spoilage, health/fatigue drift, weather, calendar. */
 export function tickDay(draft: GameState, rng: () => number, opts: { resting?: boolean } = {}) {
   draft.weather = rollWeather(draft, rng);
@@ -248,6 +267,15 @@ export function tickDay(draft: GameState, rng: () => number, opts: { resting?: b
   const weatherDelta = WEATHER_HEALTH_DELTA[draft.weather];
   if (weatherDelta !== 0) {
     for (const person of livingParty(draft)) adjustHealth(person, weatherDelta);
+  }
+
+  if (opts.resting) {
+    applyRestBenefits(draft);
+    pushLog(
+      draft,
+      "A day of rest: fatigue eases, spirits lift, small repairs keep the wagon sound, and the animals graze — the sick get a head start on recovering, too.",
+      "good"
+    );
   }
 
   draft.date = advanceCalendar(draft.date, 1);
