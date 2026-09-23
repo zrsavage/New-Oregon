@@ -17,6 +17,10 @@
   --critical: #8b1a1a;
   --shadow: rgba(58, 42, 26, 0.35);
   --radius: 6px;
+  /* The whole page is designed for a light, papery look — without this, a
+     browser/OS in dark mode renders native form controls (inputs, etc.)
+     with dark-mode defaults, e.g. white text, regardless of our own CSS. */
+  color-scheme: light;
 }
 
 * {
@@ -137,6 +141,7 @@ h1, h2, h3, h4 {
   border: 2px solid var(--wood);
   border-radius: var(--radius);
   background: var(--paper);
+  color: var(--ink);
   font-family: inherit;
   font-size: 1em;
 }
@@ -358,6 +363,8 @@ h1, h2, h3, h4 {
   padding: 4px;
   border: 1px solid var(--wood);
   border-radius: 4px;
+  background: var(--paper);
+  color: var(--ink);
   font-family: inherit;
 }
 

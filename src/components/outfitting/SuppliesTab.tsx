@@ -30,7 +30,7 @@ export default function SuppliesTab() {
   const weight = selectTotalWeight(state);
   const capacity = selectCapacity(state);
 
-  const getQty = (id: string) => qtyDrafts[id] ?? 10;
+  const getQty = (id: string) => qtyDrafts[id] ?? 1;
 
   const provisions = estimateProvisions(state);
   const currentFood = FOOD_IDS.reduce((sum, id) => sum + getItemQty(state, id), 0);

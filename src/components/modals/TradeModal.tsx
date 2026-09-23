@@ -28,7 +28,7 @@ export default function TradeModal() {
   if (!pendingTrade) return null;
 
   const landmark = TRAIL_BY_ID[state.currentLandmarkId];
-  const getQty = (id: string) => qtyDrafts[id] ?? 5;
+  const getQty = (id: string) => qtyDrafts[id] ?? 1;
 
   return (
     <div className="modal-backdrop">
