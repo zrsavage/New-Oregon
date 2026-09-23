@@ -48,12 +48,12 @@ function WagonIcon() {
 const METHOD_COPY: Record<SteerableCrossingMethod, { verb: string; hint: string; obstacle: string }> = {
   ford: {
     verb: "Ford",
-    hint: "Steer the wagon with your mouse — weave around the submerged rocks before you reach the far bank.",
+    hint: "Steer the wagon — move your mouse or drag your finger — to weave around the submerged rocks before you reach the far bank.",
     obstacle: "rock",
   },
   caulk_float: {
     verb: "Float",
-    hint: "Keep the sealed wagon steady with your mouse — dodge the drifting logs as the current pulls you across.",
+    hint: "Keep the sealed wagon steady — move your mouse or drag your finger — to dodge the drifting logs as the current pulls you across.",
     obstacle: "log",
   },
 };
@@ -172,13 +172,18 @@ export default function RiverCrossingGame({
     wagonState.current.targetY = Math.max(BAND_TOP + 10, Math.min(BAND_BOTTOM - 10, p.y));
   }
 
-  function handleMouseMove(e: React.MouseEvent<SVGSVGElement>) {
+  // Pointer Events unify mouse, touch, and pen into one handler. Capturing
+  // the pointer on press keeps steering working even if a dragging finger
+  // strays outside the scene's bounds, and positions the wagon immediately
+  // on first touch instead of waiting for the finger to move.
+  function handlePointerDown(e: React.PointerEvent<SVGSVGElement>) {
+    if (stopped) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
     steerTo(e.clientX, e.clientY);
   }
 
-  function handleTouchMove(e: React.TouchEvent<SVGSVGElement>) {
-    const touch = e.touches[0];
-    if (touch) steerTo(touch.clientX, touch.clientY);
+  function handlePointerMove(e: React.PointerEvent<SVGSVGElement>) {
+    steerTo(e.clientX, e.clientY);
   }
 
   function skip() {
@@ -198,8 +203,8 @@ export default function RiverCrossingGame({
         ref={svgRef}
         viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
         className="river-crossing-scene"
-        onMouseMove={stopped ? undefined : handleMouseMove}
-        onTouchMove={stopped ? undefined : handleTouchMove}
+        onPointerDown={stopped ? undefined : handlePointerDown}
+        onPointerMove={stopped ? undefined : handlePointerMove}
         role="img"
         aria-label={`River crossing scene: steer the wagon to dodge ${copy.obstacle}s`}
       >

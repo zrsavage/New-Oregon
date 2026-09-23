@@ -999,6 +999,7 @@ h1, h2, h3, h4 {
   height: auto;
   aspect-ratio: 640 / 200;
   background: #dce6c4;
+  touch-action: none;
   border: 2px solid var(--wood);
   border-radius: 6px;
   cursor: crosshair;
@@ -1054,6 +1055,7 @@ h1, h2, h3, h4 {
   border: 2px solid var(--wood);
   border-radius: 6px;
   cursor: crosshair;
+  touch-action: none;
   overflow: visible;
 }
 .river-wagon-group {

@@ -84,9 +84,10 @@ function AnimalSilhouette({ kind, color, darkColor }: { kind: HuntAnimalId; colo
 
 /**
  * A real aim-and-shoot hunting scene: an animal runs back and forth across
- * the field, the player tracks it with a reticle and clicks to fire.
+ * the field, the player tracks it with a reticle and taps/clicks to fire
+ * (Pointer Events, so a dragging finger works the same as a moving mouse).
  * Quality (0-100) comes from how close the shot lands to the animal's
- * actual position at the moment of the click — never a substitute for the
+ * actual position at the moment of firing — never a substitute for the
  * underlying skill-based hit/miss roll, just how clean a hit it was.
  */
 export default function HuntingRange({
@@ -154,12 +155,26 @@ export default function HuntingRange({
     return { x: local.x, y: local.y };
   }
 
-  function handleMouseMove(e: React.MouseEvent<SVGSVGElement>) {
-    const p = svgPoint(e.clientX, e.clientY);
+  function updateReticle(clientX: number, clientY: number) {
+    const p = svgPoint(clientX, clientY);
     if (p && reticleRef.current) {
       reticleRef.current.setAttribute("transform", `translate(${p.x}, ${p.y})`);
       reticleRef.current.style.opacity = "1";
     }
+  }
+
+  // Pointer Events unify mouse, touch, and pen: move (or drag a finger) to
+  // aim, release to fire. Capturing the pointer on press keeps aiming
+  // working even if a dragging finger strays outside the scene's bounds.
+  function handlePointerDown(e: React.PointerEvent<SVGSVGElement>) {
+    if (stopped) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    updateReticle(e.clientX, e.clientY);
+  }
+
+  function handlePointerMove(e: React.PointerEvent<SVGSVGElement>) {
+    if (stopped) return;
+    updateReticle(e.clientX, e.clientY);
   }
 
   function fire(clickPoint: { x: number; y: number } | null) {
@@ -188,7 +203,7 @@ export default function HuntingRange({
     resolveTimeoutRef.current = window.setTimeout(() => onResolve(50), 300);
   }
 
-  function handleClick(e: React.MouseEvent<SVGSVGElement>) {
+  function handlePointerUp(e: React.PointerEvent<SVGSVGElement>) {
     const p = svgPoint(e.clientX, e.clientY);
     if (p) fire(p);
   }
@@ -204,11 +219,12 @@ export default function HuntingRange({
         ref={svgRef}
         viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
         className="hunting-range-scene"
-        onMouseMove={stopped ? undefined : handleMouseMove}
-        onMouseLeave={() => {
+        onPointerDown={stopped ? undefined : handlePointerDown}
+        onPointerMove={stopped ? undefined : handlePointerMove}
+        onPointerUp={stopped ? undefined : handlePointerUp}
+        onPointerLeave={() => {
           if (reticleRef.current) reticleRef.current.style.opacity = "0";
         }}
-        onClick={stopped ? undefined : handleClick}
         role="img"
         aria-label={`Hunting scene: track and shoot ${ANIMAL_LABELS[animalId]}`}
       >
@@ -243,7 +259,7 @@ export default function HuntingRange({
           ? outcome === "hit"
             ? "Shot fired — a clean hit!"
             : "Shot fired — that one went wide."
-          : `Track ${ANIMAL_LABELS[animalId]} and click to fire before it gets spooked.`}
+          : `Track ${ANIMAL_LABELS[animalId]} — aim, then tap or click to fire before it gets spooked.`}
       </p>
 
       {allowSkip && !stopped && (
